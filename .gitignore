@@ -1,0 +1,7 @@
+# local tooling
+.claude/
+
+# os noise
+Thumbs.db
+Desktop.ini
+.DS_Store

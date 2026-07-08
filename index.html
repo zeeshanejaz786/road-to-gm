@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b100c">
+  <meta name="description" content="A free offline chess academy: rated bots from 350 to 2500, a coach that grades every move, engine-verified checkmate puzzles, opening drills, and a rating that tracks your climb.">
+  <meta property="og:title" content="Road to GM — chess training">
+  <meta property="og:description" content="Rated bots, a coach that names every blunder, engine-proofed puzzles. Free, offline, no account.">
+  <meta property="og:type" content="website">
+  <title>Road to GM — chess training</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='80'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24">
+      <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <rect x="4.9" y="4.9" width="7.1" height="7.1" fill="currentColor" opacity=".55"/>
+      <rect x="12" y="12" width="7.1" height="7.1" fill="currentColor" opacity=".55"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 2.6a3.2 3.2 0 0 1 3.2 3.2c0 1.2-.66 2.24-1.63 2.8l1.53 3.9H8.9l1.53-3.9A3.2 3.2 0 0 1 8.8 5.8 3.2 3.2 0 0 1 12 2.6zM7.4 14h9.2l1 3.4H6.4zM5 19h14a1.4 1.4 0 0 1 1.4 1.4v.9H3.6v-.9A1.4 1.4 0 0 1 5 19z"/>
+    </symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M13.2 2 4 14.2h5.6L8.4 22l9.6-12.6h-5.8z"/>
+    </symbol>
+    <symbol id="i-book" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+        d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5zM19 19v3H7.5A2.5 2.5 0 0 1 5 19.5M9 7h6M9 10.5h4"/>
+    </symbol>
+    <symbol id="i-learn" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"
+        d="M12 3 2 8l10 5 10-5-10-5zM6.5 10.6V15c0 1.6 2.5 3 5.5 3s5.5-1.4 5.5-3v-4.4M22 8v6"/>
+    </symbol>
+    <symbol id="i-stats" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
+        d="M4 20v-6M10 20V5M16 20v-9M21 20H3"/>
+    </symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.7"
+        d="M12 8.6a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+        d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5"/>
+    </symbol>
+    <symbol id="i-hint" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+        d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 3.6-2.3 4.9-.6.8-.7 1.2-.7 2.1H9c0-.9-.1-1.3-.7-2.1C7.2 12.6 6 11.2 6 9a6 6 0 0 1 6-6zM9.6 19.4h4.8M10.6 22h2.8"/>
+    </symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+        d="M7.5 4.5 3.5 8.5l4 4M3.8 8.5H15a5.5 5.5 0 0 1 0 11H8"/>
+    </symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+        d="M8 3.5 4.5 7 8 10.5M4.9 7H14a6 6 0 0 1 6 6M16 20.5 19.5 17 16 13.5M19.1 17H10a6 6 0 0 1-6-6"/>
+    </symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+        d="M6 21V4m0 1h11.5l-2.6 3.8L17.5 13H6"/>
+    </symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M4 9v6h4l5 4.5v-15L8 9z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>
+    </symbol>
+    <symbol id="i-sound-off" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M4 9v6h4l5 4.5v-15L8 9z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="m16 9.5 5 5M21 9.5l-5 5"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/>
+    </symbol>
+    <symbol id="i-back" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14.5 5 8 12l6.5 7"/>
+    </symbol>
+    <symbol id="i-next" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9.5 5 16 12l-6.5 7"/>
+    </symbol>
+    <symbol id="i-end" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 5l6.5 7L6 19M17.5 5v14"/>
+    </symbol>
+    <symbol id="i-start" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 5l-6.5 7L18 19M6.5 5v14"/>
+    </symbol>
+    <symbol id="i-live" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+      <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".5"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <nav class="rail" id="rail">
+    <div class="rail-logo" title="Road to GM">♞</div>
+    <button class="rail-btn active" data-nav="home" title="Home"><svg><use href="#i-home"/></svg><span>Home</span></button>
+    <button class="rail-btn" data-nav="bots" title="Play"><svg><use href="#i-play"/></svg><span>Play</span></button>
+    <button class="rail-btn" data-nav="puzzles" title="Puzzles"><svg><use href="#i-puzzle"/></svg><span>Puzzles</span></button>
+    <button class="rail-btn" data-nav="openings" title="Openings"><svg><use href="#i-book"/></svg><span>Openings</span></button>
+    <button class="rail-btn" data-nav="learn" title="Learn"><svg><use href="#i-learn"/></svg><span>Learn</span></button>
+    <button class="rail-btn" data-nav="stats" title="Stats"><svg><use href="#i-stats"/></svg><span>Stats</span></button>
+    <div class="rail-spacer"></div>
+    <button class="rail-btn" data-action="settings" title="Settings"><svg><use href="#i-gear"/></svg><span>Setup</span></button>
+  </nav>
+
+  <main class="stage">
+
+    <!-- ============ HOME ============ -->
+    <section class="screen active" id="screen-home">
+      <div class="home-hero">
+        <div class="hero-copy">
+          <h1 class="wordmark">Road <em>to</em> GM</h1>
+          <p class="tagline">A private chess academy on your desk. Rated bots from beginner to beast,
+            a coach that names every blunder, and puzzles proven by the engine itself.</p>
+          <div class="hero-actions">
+            <button class="btn btn-gold btn-lg" data-nav="bots">Play a rated game</button>
+            <button class="btn btn-ghost btn-lg" id="btn-continue" hidden>Resume game</button>
+          </div>
+          <p class="hero-tip" id="home-tip"></p>
+        </div>
+        <div class="hero-medal">
+          <div class="medallion" id="medallion">
+            <svg viewBox="0 0 200 200" class="medal-ring">
+              <circle cx="100" cy="100" r="88" class="medal-track"/>
+              <circle cx="100" cy="100" r="88" class="medal-progress" id="medal-progress"/>
+            </svg>
+            <div class="medal-core">
+              <div class="medal-label">your rating</div>
+              <div class="medal-rating" id="medal-rating">800</div>
+              <div class="medal-tier" id="medal-tier">Novice</div>
+            </div>
+          </div>
+          <div class="medal-next" id="medal-next"></div>
+          <div class="coin-chip" id="coin-balance">🪙 0</div>
+        </div>
+      </div>
+
+      <div class="mode-grid" id="mode-grid">
+        <button class="mode-card" data-nav="bots">
+          <span class="mode-ghost">♟</span>
+          <span class="mode-name">The Ladder</span>
+          <span class="mode-sub">Seven rated bots, from Pip (350) to Magnus Mode (2500)</span>
+        </button>
+        <button class="mode-card" data-action="local-game">
+          <span class="mode-ghost">♞</span>
+          <span class="mode-name">Pass &amp; Play</span>
+          <span class="mode-sub">Two players, one board, old-school</span>
+        </button>
+        <button class="mode-card" data-nav="puzzles">
+          <span class="mode-ghost">♝</span>
+          <span class="mode-name">Tactics</span>
+          <span class="mode-sub">Engine-verified checkmate puzzles</span>
+        </button>
+        <button class="mode-card" data-nav="openings">
+          <span class="mode-ghost">♜</span>
+          <span class="mode-name">Openings</span>
+          <span class="mode-sub">28 lines worth knowing, step by step</span>
+        </button>
+        <button class="mode-card" data-nav="learn">
+          <span class="mode-ghost">♛</span>
+          <span class="mode-name">The Path</span>
+          <span class="mode-sub">What to train at every rating band</span>
+        </button>
+        <button class="mode-card" data-nav="stats">
+          <span class="mode-ghost">♚</span>
+          <span class="mode-name">Your Story</span>
+          <span class="mode-sub">Rating graph, records, accuracy</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ BOT SELECT ============ -->
+    <section class="screen" id="screen-bots">
+      <header class="screen-head">
+        <h2 class="screen-title">Choose your opponent</h2>
+        <p class="screen-sub">Beat a bot three times in a row, then move up the ladder.</p>
+      </header>
+      <div class="setup-bar">
+        <div class="setup-group">
+          <span class="setup-label">You play</span>
+          <div class="seg" id="seg-color">
+            <button data-color="white" class="active">White</button>
+            <button data-color="random">Random</button>
+            <button data-color="black">Black</button>
+          </div>
+        </div>
+        <div class="setup-group">
+          <span class="setup-label">Clock</span>
+          <div class="seg" id="seg-time">
+            <button data-time="0" class="active">None</button>
+            <button data-time="5">5 min</button>
+            <button data-time="10">10 min</button>
+            <button data-time="15+10">15 | 10</button>
+          </div>
+        </div>
+        <div class="setup-group">
+          <span class="setup-label">Coach</span>
+          <label class="switch">
+            <input type="checkbox" id="coach-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="bot-lane" id="bot-lane"></div>
+    </section>
+
+    <!-- ============ GAME ============ -->
+    <section class="screen" id="screen-game">
+      <div class="game-layout">
+        <div class="board-zone">
+          <div class="evalbar" id="evalbar" hidden>
+            <div class="evalbar-fill" id="evalbar-fill"></div>
+            <div class="evalbar-num" id="evalbar-num">0.0</div>
+          </div>
+          <div class="board-col">
+            <div class="player-bar" id="pbar-top"></div>
+            <div class="board-frame">
+              <div class="board" id="board"></div>
+            </div>
+            <div class="player-bar" id="pbar-bottom"></div>
+          </div>
+        </div>
+        <aside class="side-panel">
+          <div class="panel-head">
+            <div class="opening-name" id="opening-name">Ready when you are.</div>
+            <button class="icon-btn" id="btn-exit-game" title="Leave game"><svg><use href="#i-close"/></svg></button>
+          </div>
+          <div class="coach-card" id="coach-card" hidden></div>
+          <div class="movelist-wrap">
+            <ol class="movelist" id="movelist"></ol>
+          </div>
+          <div class="history-nav">
+            <button class="icon-btn" id="nav-start" title="Start"><svg><use href="#i-start"/></svg></button>
+            <button class="icon-btn" id="nav-back" title="Back"><svg><use href="#i-back"/></svg></button>
+            <button class="icon-btn" id="nav-fwd" title="Forward"><svg><use href="#i-next"/></svg></button>
+            <button class="icon-btn" id="nav-end" title="End"><svg><use href="#i-end"/></svg></button>
+            <button class="icon-btn live-btn" id="nav-live" title="Back to live" hidden><svg><use href="#i-live"/></svg><span>Live</span></button>
+          </div>
+          <div class="game-controls">
+            <button class="ctl-btn" id="btn-hint"><svg><use href="#i-hint"/></svg>Hint</button>
+            <button class="ctl-btn" id="btn-undo"><svg><use href="#i-undo"/></svg>Undo</button>
+            <button class="ctl-btn" id="btn-flip"><svg><use href="#i-flip"/></svg>Flip</button>
+            <button class="ctl-btn" id="btn-resign"><svg><use href="#i-flag"/></svg>Resign</button>
+            <button class="ctl-btn" id="btn-sound" title="Sound"><svg id="sound-icon"><use href="#i-sound"/></svg></button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ PUZZLES ============ -->
+    <section class="screen" id="screen-puzzles">
+      <header class="screen-head">
+        <h2 class="screen-title">Tactics</h2>
+        <p class="screen-sub">Every puzzle below was found and proof-checked by the engine: one winning move, forced mate.</p>
+      </header>
+      <div class="puzzle-layout">
+        <div class="puzzle-board-wrap">
+          <div class="board" id="puzzle-board"></div>
+        </div>
+        <aside class="puzzle-panel">
+          <div class="puzzle-tabs seg" id="puzzle-tabs">
+            <button data-diff="1" class="active">Warmup <small>M1</small></button>
+            <button data-diff="2">Tactic <small>M2</small></button>
+            <button data-diff="3">Boss <small>M3</small></button>
+          </div>
+          <div class="puzzle-status">
+            <div class="pz-stat"><span id="pz-streak">0</span><label>streak</label></div>
+            <div class="pz-stat"><span id="pz-best">0</span><label>best</label></div>
+            <div class="pz-stat"><span id="pz-solved">0/0</span><label>solved</label></div>
+          </div>
+          <div class="puzzle-prompt" id="puzzle-prompt">Pick a difficulty to begin.</div>
+          <div class="puzzle-feedback" id="puzzle-feedback"></div>
+          <div class="puzzle-actions">
+            <button class="btn btn-ghost" id="pz-hint">Nudge</button>
+            <button class="btn btn-ghost" id="pz-skip">Skip</button>
+            <button class="btn btn-gold" id="pz-next" hidden>Next puzzle</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ OPENINGS ============ -->
+    <section class="screen" id="screen-openings">
+      <header class="screen-head">
+        <h2 class="screen-title">Openings</h2>
+        <p class="screen-sub">Learn one line at a time. Step through it, then drill it against a bot that plays the book.</p>
+      </header>
+      <div class="openings-grid" id="openings-grid"></div>
+    </section>
+
+    <!-- ============ LEARN ============ -->
+    <section class="screen" id="screen-learn">
+      <header class="screen-head">
+        <h2 class="screen-title">The Path</h2>
+        <p class="screen-sub">Chess skill is built in bands. Find yours, train what actually matters there.</p>
+      </header>
+      <div class="learn-body" id="learn-body"></div>
+    </section>
+
+    <!-- ============ STATS ============ -->
+    <section class="screen" id="screen-stats">
+      <header class="screen-head">
+        <h2 class="screen-title">Your Story</h2>
+        <p class="screen-sub">The graph only goes up if you review your losses.</p>
+      </header>
+      <div class="stats-body" id="stats-body"></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script src="js/engine.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/openings.js"></script>
+<script src="js/puzzles-data.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/board.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/game.js"></script>
+<script src="js/puzzles.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

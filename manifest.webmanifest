@@ -1,0 +1,12 @@
+{
+  "name": "Road to GM — chess training",
+  "short_name": "Road to GM",
+  "description": "Rated bots, a coach that grades every move, engine-verified puzzles. Free and offline.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b100c",
+  "theme_color": "#0b100c",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

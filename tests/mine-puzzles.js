@@ -1,0 +1,157 @@
+// Mine engine-verified mate puzzles from flawed self-play games.
+// Writes js/puzzles-data.js. Usage: node tests/mine-puzzles.js [seconds]
+const fs = require('fs');
+const path = require('path');
+const RTG = require('../js/engine.js');
+const AI = require('../js/ai.js');
+
+const BUDGET_S = parseInt(process.argv[2] || '150', 10);
+const QUOTA = { 1: 20, 2: 20, 3: 12 };
+const found = { 1: [], 2: [], 3: [] };
+const seen = new Set();
+
+function posKey(g) { return g.keyLo + ':' + g.keyHi; }
+
+// exact uniqueness for mate-in-1: count moves that give immediate mate
+function uniqueMateIn1(g) {
+  const legal = g.legalMoves();
+  let mates = 0, mateMove = 0;
+  for (const m of legal) {
+    g.make(m);
+    const opp = g.legalMoves();
+    if (opp.length === 0 && g.inCheck()) { mates++; mateMove = m; }
+    g.unmake();
+    if (mates > 1) return 0;
+  }
+  return mates === 1 ? mateMove : 0;
+}
+
+// search-based uniqueness for mate-in-N (N>=2): exactly one root move keeps forced mate <= N
+function uniqueMateInN(g, N, bestMove) {
+  const legal = g.legalMoves();
+  let solutions = 0;
+  for (const m of legal) {
+    g.make(m);
+    const r = AI.think(g, { timeMs: 400, maxDepth: 2 * N + 2 });
+    g.unmake();
+    // after our move, opponent to move: r.mate < 0 means opponent gets mated
+    if (r && r.mate < 0 && Math.abs(r.mate) <= N - 1) solutions++;
+    if (solutions > 1) return false;
+  }
+  return solutions === 1;
+}
+
+function pieceCount(g) {
+  let n = 0;
+  for (let sq = 0; sq < 128; sq++) {
+    if (!(sq & 0x88) && g.board[sq]) n++;
+  }
+  return n;
+}
+
+function tryHarvest(g, gameCtx) {
+  if (seen.has(posKey(g))) return;
+  if (gameCtx.cooldown > 0) return; // just harvested from this game, let it evolve
+  const r = AI.think(g, { timeMs: 220, maxDepth: 7 });
+  if (!r || !(r.mate >= 1 && r.mate <= 3)) return;
+  const N = r.mate;
+  if (found[N].length >= QUOTA[N]) return;
+  if (pieceCount(g) < 5 && N === 1) return; // too bare, boring
+  if (gameCtx.harvestedMoves.has(RTG.uci(r.move))) return; // same tactic lingering
+
+  // confirm with a longer, careful search
+  const confirm = AI.think(g, { timeMs: 900, maxDepth: 2 * N + 4 });
+  if (!confirm || confirm.mate !== N) return;
+
+  let solutionMove = confirm.move;
+  if (N === 1) {
+    const u = uniqueMateIn1(g);
+    if (!u) return;
+    solutionMove = u;
+  } else {
+    if (!uniqueMateInN(g, N, solutionMove)) return;
+  }
+
+  seen.add(posKey(g));
+  gameCtx.harvestedMoves.add(RTG.uci(solutionMove));
+  gameCtx.cooldown = 8;
+  found[N].push({
+    fen: g.fen(),
+    mateIn: N,
+    best: RTG.uci(solutionMove),
+    pv: confirm.pv.slice(0, 2 * N - 1)
+  });
+  console.log(`  +M${N} (${found[N].length}/${QUOTA[N]}) ${RTG.uci(solutionMove)} | ${g.fen()}`);
+}
+
+function playGame(deadline) {
+  const g = new RTG.Game();
+  const gameCtx = { harvestedMoves: new Set(), cooldown: 0 };
+  // random-ish opening: 6 random legal plies
+  for (let i = 0; i < 6; i++) {
+    const legal = g.legalMoves();
+    if (!legal.length) return;
+    g.make(legal[(Math.random() * legal.length) | 0]);
+  }
+  for (let ply = 0; ply < 90; ply++) {
+    if (Date.now() > deadline) return;
+    if (gameCtx.cooldown > 0) gameCtx.cooldown--;
+    const st = g.status();
+    if (st.over) return;
+    // harvest before moving
+    if (ply >= 4) tryHarvest(g, gameCtx);
+    if (Date.now() > deadline) return;
+    // weak move choice: depth 2 with wide band, 12% random
+    let move;
+    const legal = g.legalMoves();
+    if (!legal.length) return;
+    if (Math.random() < 0.12) {
+      move = legal[(Math.random() * legal.length) | 0];
+    } else {
+      const r = AI.think(g, { timeMs: 60, maxDepth: 2 });
+      const band = 150;
+      const cands = r.rootScores.filter(s => s.score > -Infinity && r.rootScores[0].score - s.score <= band);
+      move = (cands.length ? cands[(Math.random() * cands.length) | 0] : r.rootScores[0]).move;
+    }
+    g.make(move);
+  }
+}
+
+const t0 = Date.now();
+const deadline = t0 + BUDGET_S * 1000;
+let games = 0;
+while (Date.now() < deadline) {
+  const full = Object.keys(QUOTA).every(n => found[n].length >= QUOTA[n]);
+  if (full) break;
+  playGame(deadline);
+  games++;
+}
+
+const all = [...found[1], ...found[2], ...found[3]];
+console.log(`\nmined ${all.length} puzzles from ${games} games in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+console.log(`M1: ${found[1].length}, M2: ${found[2].length}, M3: ${found[3].length}`);
+
+// final re-verification pass with generous time
+let bad = 0;
+for (const p of all) {
+  const g = new RTG.Game(p.fen);
+  const r = AI.think(g, { timeMs: 1200, maxDepth: 2 * p.mateIn + 5 });
+  if (!r || r.mate !== p.mateIn) { bad++; p.bad = true; console.log(`REJECT ${p.fen} (mate=${r && r.mate})`); }
+}
+const final = all.filter(p => !p.bad).map((p, i) => ({
+  id: 'p' + (i + 1), fen: p.fen, mateIn: p.mateIn, best: p.best, pv: p.pv
+}));
+console.log(`verified: ${final.length} (rejected ${bad})`);
+
+const out = `/* Auto-generated by tests/mine-puzzles.js — every puzzle engine-verified:
+   forced mate in N with a UNIQUE first move. Do not edit by hand. */
+(function () {
+  'use strict';
+  var PUZZLES = ${JSON.stringify(final, null, 2)};
+  if (typeof module !== 'undefined' && module.exports) module.exports = PUZZLES;
+  else (typeof window !== 'undefined' ? window : this).RTG_PUZZLES = PUZZLES;
+}());
+`;
+fs.writeFileSync(path.join(__dirname, '..', 'js', 'puzzles-data.js'), out);
+console.log('wrote js/puzzles-data.js');
+process.exit(final.length >= 30 ? 0 : 1);
