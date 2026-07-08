@@ -21,6 +21,8 @@
     this.pieceEls = {};      // sq -> element
     this.lastFrom = -1; this.lastTo = -1;
     this.checkSq = -1;
+    this.clickMode = false; // when true, taps report squares instead of moving pieces
+    this.stars = [];
     this._drag = null;
     this._build();
   }
@@ -211,6 +213,10 @@
       this.squares[this.lastTo] && this.squares[this.lastTo].classList.add('last');
     }
     if (this.checkSq >= 0 && this.squares[this.checkSq]) this.squares[this.checkSq].classList.add('check');
+    for (var i = 0; i < this.stars.length; i++) {
+      var d = this.squares[this.stars[i]];
+      if (d) d.classList.add('star');
+    }
   };
   BoardView.prototype.setLastMove = function (from, to) {
     if (this.lastFrom >= 0) {
@@ -242,6 +248,27 @@
     if (!d) return;
     d.classList.add(cls);
     setTimeout(function () { d.classList.remove(cls); }, 500);
+  };
+  BoardView.prototype.setStars = function (list) {
+    this.clearStars();
+    this.stars = list.slice();
+    for (var i = 0; i < list.length; i++) {
+      var d = this.squares[list[i]];
+      if (d) d.classList.add('star');
+    }
+  };
+  BoardView.prototype.removeStar = function (sq) {
+    var i = this.stars.indexOf(sq);
+    if (i >= 0) this.stars.splice(i, 1);
+    var d = this.squares[sq];
+    if (d) d.classList.remove('star');
+  };
+  BoardView.prototype.clearStars = function () {
+    for (var i = 0; i < this.stars.length; i++) {
+      var d = this.squares[this.stars[i]];
+      if (d) d.classList.remove('star');
+    }
+    this.stars = [];
   };
   BoardView.prototype.shake = function () {
     this.el.classList.remove('shake');
@@ -313,6 +340,7 @@
     this.clearSelection();
     this.selected = sq;
     this.squares[sq].classList.add('sel');
+    if (this.opts.onSelect) this.opts.onSelect(sq, this.game ? this.game.board[sq] : 0);
     if (!this.showLegal) return;
     var legal = this.game.legalMoves();
     for (var i = 0; i < legal.length; i++) {
@@ -331,6 +359,11 @@
     if (this._promoActive) return;
     var sq = this._eventSquare(e);
     if (sq < 0) return;
+
+    if (this.clickMode) {
+      if (this.opts.onSquareClick) this.opts.onSquareClick(sq);
+      return;
+    }
 
     if (this.selected >= 0 && this.legalTargets.indexOf(sq) >= 0) {
       this._tryMove(this.selected, sq);

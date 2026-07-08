@@ -715,6 +715,111 @@ svg { display: block; }
 .ctl-btn:hover { color: var(--gold-bright); background: rgba(201, 164, 65, 0.08); }
 .ctl-btn[disabled] { opacity: .35; pointer-events: none; }
 
+/* ============ first steps (basics) ============ */
+.mode-card.firststeps { border-color: rgba(133, 169, 79, 0.4); }
+.mode-card.firststeps:hover { border-color: rgba(163, 189, 111, 0.7); }
+.mode-card.firststeps .mode-ghost { font-size: 96px; right: -4px; bottom: -18px; }
+
+.lesson-list {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  background: rgba(21, 29, 22, 0.6);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+}
+.lesson-group-name {
+  font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 7px;
+}
+.lesson-pills { display: flex; gap: 6px; }
+.lesson-pill {
+  position: relative;
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  font-size: 18px;
+  background: rgba(11, 16, 12, 0.55);
+  border: 1.5px solid var(--line-soft);
+  transition: transform .15s, border-color .15s;
+}
+.lesson-pill:hover { transform: translateY(-2px); border-color: var(--gold-dim); }
+.lesson-pill.at { border-color: var(--gold); box-shadow: 0 0 12px rgba(201, 164, 65, 0.35); }
+.lesson-pill.done { border-color: rgba(133, 169, 79, 0.55); }
+.lesson-pill i {
+  position: absolute; top: -6px; right: -6px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #101609;
+  font-size: 10px; font-style: normal; font-weight: 700;
+  display: grid; place-items: center;
+}
+
+.basics-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 26px;
+  align-items: start;
+}
+.basics-board-wrap {
+  width: min(100%, calc(86vh - 140px));
+  margin: 0 auto;
+  padding: 12px;
+  border-radius: 18px;
+  background: linear-gradient(170deg, #1d2a1f, #131b14);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+}
+.lesson-panel {
+  background: linear-gradient(175deg, rgba(26, 35, 27, 0.75), rgba(17, 24, 18, 0.85));
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex; flex-direction: column; gap: 12px;
+  position: sticky; top: 30px;
+}
+.lesson-chip {
+  font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--gold-bright);
+}
+.lesson-panel h3 { font-family: var(--font-display); font-size: 27px; font-weight: 600; }
+.lesson-intro { font-size: 14px; line-height: 1.65; color: var(--muted); }
+.lesson-intro b { color: var(--ivory); }
+.lesson-task {
+  font-size: 14px; font-weight: 600;
+  color: var(--gold-bright);
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(201, 164, 65, 0.08);
+  border: 1px solid rgba(201, 164, 65, 0.3);
+  line-height: 1.5;
+}
+.lesson-feedback { min-height: 40px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.lesson-feedback.good { color: var(--green-soft); }
+.lesson-feedback.bad { color: #e5917f; }
+.lesson-actions { display: flex; gap: 8px; }
+.lesson-actions .btn { flex: 1; }
+
+/* star targets on drill boards */
+.sq.star::before {
+  content: '★';
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 6cqw;
+  color: #e9cb70;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  animation: starPulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes starPulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.18); opacity: 0.7; }
+}
+
 /* ============ puzzles ============ */
 .puzzle-layout {
   display: grid;
@@ -1061,6 +1166,9 @@ svg { display: block; }
   .puzzle-layout { grid-template-columns: 1fr; }
   .puzzle-panel { position: static; }
   .puzzle-board-wrap { width: min(100%, 74vh); }
+  .basics-layout { grid-template-columns: 1fr; }
+  .lesson-panel { position: static; }
+  .basics-board-wrap { width: min(100%, 70vh); }
 }
 @media (max-width: 950px) {
   .home-hero { grid-template-columns: 1fr; text-align: center; }

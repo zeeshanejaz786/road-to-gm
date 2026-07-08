@@ -245,8 +245,15 @@
     return false;
   };
 
+  // training drills may omit kings entirely; kingSq is only trustworthy
+  // when a real king sits on it
+  Game.prototype.hasKing = function (color) {
+    return this.board[this.kingSq[color]] === (KING | (color ? BLACK_FLAG : 0));
+  };
+
   Game.prototype.inCheck = function (color) {
     if (color === undefined) color = this.turn;
+    if (!this.hasKing(color)) return false;
     return this.isAttacked(this.kingSq[color], color ^ 1);
   };
 
@@ -504,6 +511,7 @@
   // ---- legality ------------------------------------------------------
   Game.prototype.legalMoves = function () {
     var pseudo = this.genMoves(false), legal = [], us = this.turn;
+    if (!this.hasKing(us)) return pseudo; // drill boards: no king, no check rules
     for (var i = 0; i < pseudo.length; i++) {
       this.make(pseudo[i]);
       if (!this.isAttacked(this.kingSq[us], this.turn)) legal.push(pseudo[i]);

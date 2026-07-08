@@ -48,6 +48,50 @@
     ]
   };
 
+  // baby-simple voice for players who are brand new to the game
+  var PHRASES_GENTLE = {
+    best: [
+      'Perfect move! That is exactly the right idea.',
+      'Wonderful. You found the very best move on the board.',
+      'Yes! Give yourself a high five.'
+    ],
+    excellent: [
+      'Really good move. You are getting the hang of this.',
+      'Nice one. Your pieces are happy.',
+      'Great choice. Keep playing like this.'
+    ],
+    good: [
+      'Good move. There was an even stronger one, but this works fine.',
+      'That is okay! Nothing bad happened.',
+      'Solid. You are doing well.'
+    ],
+    inaccuracy: [
+      'Hmm, not the best spot. Nothing terrible, but look around a little longer next time.',
+      'That move is a little soft. Before moving, peek at what your opponent might do back.',
+      'Almost! A better square was waiting. Keep going.'
+    ],
+    mistake: [
+      'Oops, that move gives your opponent a chance. Next time, check: can anything of mine be captured?',
+      'Careful! Before each move, look at every one of your pieces and ask: is it safe?',
+      'That one hurts a little. It happens to everyone. Look at what your opponent attacks now.'
+    ],
+    blunder: [
+      'Oh no, that move gives something away for free! Look at the board: which of your pieces can be captured right now?',
+      'Big oops! Do not worry, every champion has done this a thousand times. Ask: what did their last move attack?',
+      'That loses a piece. Take a breath. Before you move, always check if your piece will be safe on its new square.'
+    ]
+  };
+
+  // plain-words piece guide, shown when a brand-new player picks up a piece
+  var PIECE_GUIDE = {
+    1: ['Pawn', 'Your little soldier. It walks one square forward (two on its first move) and captures diagonally. Reach the far end and it becomes a Queen!'],
+    2: ['Knight', 'The horse! It jumps in an L shape: two squares one way, then one square sideways. It is the only piece that can hop over others.'],
+    3: ['Bishop', 'The pointy-hat one. It slides diagonally as far as it wants, but always stays on its own color.'],
+    4: ['Rook', 'The castle tower. It slides in straight lines: up, down, left, right. As far as it wants.'],
+    5: ['Queen', 'Your strongest piece! She moves like a Rook and a Bishop combined: any straight or diagonal line.'],
+    6: ['King', 'The most important piece. He only steps one square at a time. If he is trapped, the game is over, so keep him safe!']
+  };
+
   function classify(cpLoss, wasBestMove) {
     if (wasBestMove) return VERDICTS[0];
     for (var i = 0; i < VERDICTS.length; i++) {
@@ -56,9 +100,13 @@
     return VERDICTS[VERDICTS.length - 1];
   }
 
-  function phrase(verdictId) {
-    var list = PHRASES[verdictId] || [''];
+  function phrase(verdictId, gentle) {
+    var list = (gentle ? PHRASES_GENTLE : PHRASES)[verdictId] || [''];
     return list[(Math.random() * list.length) | 0];
+  }
+
+  function pieceGuide(type) {
+    return PIECE_GUIDE[type] || null;
   }
 
   // per-move accuracy from win% swing (lichess-style curve)
@@ -105,6 +153,7 @@
   window.RTGCoach = {
     classify: classify,
     phrase: phrase,
+    pieceGuide: pieceGuide,
     moveAccuracy: moveAccuracy,
     gameAccuracy: gameAccuracy,
     eloDelta: eloDelta,

@@ -93,6 +93,10 @@
       <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
       <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".5"/>
     </symbol>
+    <symbol id="i-sprout" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+        d="M12 21v-8M12 13c0-4 2.5-6.5 7-6.5 0 4.5-2.5 6.5-7 6.5zM12 11c0-3.2-2-5.2-5.6-5.2 0 3.6 2 5.2 5.6 5.2zM7 21h10"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -101,6 +105,7 @@
     <div class="rail-logo" title="Road to GM">♞</div>
     <button class="rail-btn active" data-nav="home" title="Home"><svg><use href="#i-home"/></svg><span>Home</span></button>
     <button class="rail-btn" data-nav="bots" title="Play"><svg><use href="#i-play"/></svg><span>Play</span></button>
+    <button class="rail-btn" data-nav="basics" title="First Steps"><svg><use href="#i-sprout"/></svg><span>Basics</span></button>
     <button class="rail-btn" data-nav="puzzles" title="Puzzles"><svg><use href="#i-puzzle"/></svg><span>Puzzles</span></button>
     <button class="rail-btn" data-nav="openings" title="Openings"><svg><use href="#i-book"/></svg><span>Openings</span></button>
     <button class="rail-btn" data-nav="learn" title="Learn"><svg><use href="#i-learn"/></svg><span>Learn</span></button>
@@ -142,6 +147,11 @@
       </div>
 
       <div class="mode-grid" id="mode-grid">
+        <button class="mode-card firststeps" data-nav="basics">
+          <span class="mode-ghost">🌱</span>
+          <span class="mode-name">First Steps</span>
+          <span class="mode-sub" id="basics-progress">Never played chess? Start from absolute zero</span>
+        </button>
         <button class="mode-card" data-nav="bots">
           <span class="mode-ghost">♟</span>
           <span class="mode-name">The Ladder</span>
@@ -253,6 +263,32 @@
       </div>
     </section>
 
+    <!-- ============ FIRST STEPS ============ -->
+    <section class="screen" id="screen-basics">
+      <header class="screen-head">
+        <h2 class="screen-title">First Steps</h2>
+        <p class="screen-sub">Chess from absolute zero. Short lessons, hands on the pieces, no jargon.
+          Each finished lesson pays 🪙 10, graduation pays 🪙 100.</p>
+      </header>
+      <div class="lesson-list" id="lesson-list"></div>
+      <div class="basics-layout">
+        <div class="basics-board-wrap">
+          <div class="board" id="basics-board"></div>
+        </div>
+        <aside class="lesson-panel">
+          <div class="lesson-chip" id="lesson-chip"></div>
+          <h3 id="lesson-title"></h3>
+          <div class="lesson-intro" id="lesson-intro"></div>
+          <div class="lesson-task" id="lesson-task"></div>
+          <div class="lesson-feedback" id="lesson-feedback"></div>
+          <div class="lesson-actions">
+            <button class="btn btn-ghost" id="lesson-restart">Restart lesson</button>
+            <button class="btn btn-gold" id="lesson-next" hidden>Continue</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
     <!-- ============ PUZZLES ============ -->
     <section class="screen" id="screen-puzzles">
       <header class="screen-head">
@@ -325,6 +361,7 @@
 <script src="js/sound.js"></script>
 <script src="js/board.js"></script>
 <script src="js/coach.js"></script>
+<script src="js/basics.js"></script>
 <script src="js/game.js"></script>
 <script src="js/puzzles.js"></script>
 <script src="js/main.js"></script>

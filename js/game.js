@@ -30,7 +30,8 @@
       theme: App.store.get().settings.boardTheme,
       showLegal: App.store.get().settings.showLegal,
       onUserMove: function (from, to, promo) { self.onUserMove(from, to, promo); },
-      canMove: function (color) { return self.canUserMove(color); }
+      canMove: function (color) { return self.canUserMove(color); },
+      onSelect: function (sq, code) { self.onPieceSelected(code); }
     });
     this.ui = {
       top: document.getElementById('pbar-top'),
@@ -74,6 +75,8 @@
     this.userColor = config.userColor === 'black' ? R.BLACK : R.WHITE;
     this.coachOn = !!config.coach && config.mode === 'bot';
     this.practice = config.practice || null;
+    this.gentle = !!config.gentle && config.mode === 'bot';
+    this._guideShown = {}; // piece-type explainers shown this game
 
     this.g = new R.Game();
     this.sanLine = [];
@@ -153,6 +156,17 @@
     }
     if (this.clock && !this.clock.running) this.switchClock();
     this.save();
+  };
+
+  // gentle mode: explain a piece in plain words when a new player picks it up
+  P.onPieceSelected = function (code) {
+    if (!this.gentle || !code || this.over) return;
+    var type = code & 7;
+    var count = this._guideShown[type] || 0;
+    if (count >= 2) return; // twice per piece per game, then trust them
+    this._guideShown[type] = count + 1;
+    var guide = Coach.pieceGuide(type);
+    if (guide) App.toast('<b>' + guide[0] + '</b> — ' + guide[1], 4500);
   };
 
   P.canUserMove = function (color) {
@@ -405,6 +419,15 @@
     else if (isCap) Sound.capture();
     else Sound.move();
 
+    // gentle mode: say out loud what "check" means
+    if (this.gentle && this.g.inCheck()) {
+      if (this.g.turn === this.userColor) {
+        App.toast('⚠️ Check! Your King is attacked. You must escape, block the attack, or capture the attacker.', 4500);
+      } else {
+        App.toast('Check! You are attacking their King. They have to deal with it right now.', 3500);
+      }
+    }
+
     if (this.clock) {
       // increment for the side that just moved
       var moved = this.g.turn ^ 1;
@@ -499,8 +522,8 @@
         (verdict.id === 'blunder' || verdict.id === 'mistake') && !self.over;
       if (offerOk) {
         App.confirmModal({
-          title: verdict.id === 'blunder' ? 'That one stings' : 'Hold on',
-          sub: 'Coach: "' + Coach.phrase(verdict.id) + '" Best was <b>' + before.san +
+          title: self.gentle ? 'Wait, little pause!' : (verdict.id === 'blunder' ? 'That one stings' : 'Hold on'),
+          sub: 'Coach: "' + Coach.phrase(verdict.id, self.gentle) + '" Best was <b>' + before.san +
             '</b>. Take the move back and find it?',
           yes: 'Take it back', no: 'Play on',
           onYes: function () { self.takeback(1); },
@@ -527,7 +550,7 @@
       '<span class="coach-move">' + mm.san +
       (mm.cpLoss > 9 ? ' · −' + (mm.cpLoss / 100).toFixed(1) : '') + '</span>' +
       '</div>' +
-      '<div class="coach-text">' + Coach.phrase(verdict.id) + '</div>' +
+      '<div class="coach-text">' + Coach.phrase(verdict.id, this.gentle) + '</div>' +
       bestLine;
     var self = this;
     var btn = el.querySelector('[data-showbest]');
@@ -842,6 +865,7 @@
         userColor: this.userColor === R.BLACK ? 'black' : 'white',
         time: this.cfg.time || null,
         coach: this.coachOn,
+        gentle: this.gentle,
         practice: this.practice
       },
       uciLine: this.meta.map(function (m) { return m.uci; }),

@@ -22,6 +22,8 @@
       lastWinDay: null,
       avatar: 'classic',
       unlocks: { themes: ['green'], avatars: ['classic'] },
+      basics: { done: {}, graduated: false },
+      firstRunDone: false,
       settings: {
         boardTheme: 'green',
         showLegal: true,
@@ -43,6 +45,7 @@
         this.data.settings = Object.assign(defaults().settings, this.data.settings || {});
         this.data.puzzles = Object.assign(defaults().puzzles, this.data.puzzles || {});
         this.data.unlocks = Object.assign(defaults().unlocks, this.data.unlocks || {});
+        this.data.basics = Object.assign(defaults().basics, this.data.basics || {});
         // grandfather: a theme selected before the shop existed stays yours
         var th = this.data.settings.boardTheme;
         if (th && this.data.unlocks.themes.indexOf(th) < 0) this.data.unlocks.themes.push(th);
@@ -254,6 +257,7 @@
       });
       if (id === 'home') App.renderHome();
       if (id === 'bots') App.renderBots();
+      if (id === 'basics') App.basics.open();
       if (id === 'puzzles') { App.puzzles.open(); }
       if (id === 'openings') App.renderOpenings();
       if (id === 'learn') App.renderLearn();
@@ -286,6 +290,19 @@
         '“' + TIPS[(Math.random() * TIPS.length) | 0] + '”';
       var coinEl = document.getElementById('coin-balance');
       if (coinEl) coinEl.textContent = '🪙 ' + d.coins;
+
+      // first steps progress on the home card
+      var bp = document.getElementById('basics-progress');
+      if (bp && App.basics) {
+        var pr = App.basics.progress();
+        if (d.basics.graduated) {
+          bp.textContent = 'Graduated 🎓 Revisit any lesson whenever you like';
+        } else if (pr.done > 0) {
+          bp.textContent = pr.done + ' of ' + pr.total + ' lessons done. Keep going!';
+        } else {
+          bp.textContent = 'Never played chess? Start from absolute zero';
+        }
+      }
 
       var cont = document.getElementById('btn-continue');
       var sg = d.savedGame;
@@ -383,11 +400,27 @@
           (info.takebacks ? '<div class="end-stat"><span>' + info.takebacks + '</span><label>takebacks</label></div>' : '') +
           '</div>';
       }
+      // plain-words explanation for brand-new players
+      var gentleLine = '';
+      if (info.cfg && info.cfg.gentle) {
+        var EXPLAIN = {
+          'checkmate': 'A King was attacked with no escape, no block, and no rescue. That is checkmate, and it ends the game on the spot.',
+          'stalemate': 'The player to move was NOT in check but had no legal move at all. That is stalemate, and it is a draw.',
+          'resignation': 'One player gave up. That counts as a loss for them.',
+          'time out': 'One player ran out of clock time, which loses the game.',
+          'threefold repetition': 'The exact same position appeared three times, so the game is a draw.',
+          'fifty-move rule': 'Fifty moves passed with no capture and no pawn move, so the game is a draw.',
+          'insufficient material': 'Neither side has enough pieces left to ever trap a King, so it is a draw.'
+        };
+        if (EXPLAIN[st.reason]) {
+          gentleLine = '<p class="modal-sub" style="text-align:center;margin-top:10px">' + EXPLAIN[st.reason] + '</p>';
+        }
+      }
       var m = App.modal(
         '<div class="endgame-head">' +
         '<div class="endgame-title ' + cls + '">' + title + '</div>' +
         '<div class="endgame-reason">by ' + st.reason + '</div>' +
-        '</div>' + deltaHtml + statsHtml +
+        '</div>' + gentleLine + deltaHtml + statsHtml +
         '<div class="modal-actions">' +
         '<button class="btn btn-gold" data-rematch>Rematch</button>' +
         '<button class="btn btn-ghost" data-newbot>' + (info.mode === 'bot' ? 'Choose bot' : 'New game') + '</button>' +
@@ -803,6 +836,7 @@
       Store.load();
       App.game = new GameController();
       App.puzzles = new PuzzleController();
+      App.basics = new BasicsController();
 
       // nav
       document.querySelectorAll('[data-nav]').forEach(function (b) {
@@ -859,6 +893,28 @@
 
       App.applySettings();
       App.showScreen('home');
+
+      // first visit: route brand-new players straight to First Steps
+      if (!Store.get().firstRunDone) {
+        Store.get().firstRunDone = true;
+        Store.save();
+        var wm = App.modal(
+          '<h3>Welcome to Road to GM ♞</h3>' +
+          '<p class="modal-sub">One quick question so we start you in the right place. ' +
+          'Have you played chess before?</p>' +
+          '<div class="modal-actions">' +
+          '<button class="btn btn-gold" data-zero>Never, teach me from zero</button>' +
+          '<button class="btn btn-ghost" data-know>I know the moves</button>' +
+          '</div>', { sticky: true });
+        wm.querySelector('[data-zero]').addEventListener('click', function () {
+          App.closeModal();
+          App.showScreen('basics');
+        });
+        wm.querySelector('[data-know]').addEventListener('click', function () {
+          App.closeModal();
+          App.toast('Great. The Ladder awaits. First Steps is always there under Basics if you want a refresher.');
+        });
+      }
     }
   };
 

@@ -12,6 +12,8 @@ For development with live reload tooling: `node server.js` and open http://local
 
 ## What is inside
 
+**First Steps (Basics)**. Never played chess in your life? Start here. Eighteen hands-on lessons that assume nothing: what the squares are called, how every piece moves (you drag them around and collect stars), how capturing works, what check, checkmate, stalemate, and draws actually mean, plus castling, promotion, and en passant. It ends with a guided first game where the coach explains any piece you touch, warns you about check in plain words, and cheers you on like a kind teacher. New visitors are asked on first launch whether they want this path.
+
 **The Ladder (Play)**. Seven rated bots from Pip (350) to Magnus Mode (2500). Pick your color, add a clock if you want (5, 10, or 15|10), and play rated games. Your Elo updates with the real formula (K=40 for your first 15 games, then 24). Beat a bot three times in a row, then move up.
 
 **The Coach**. With coach mode on, every move you play is graded like chess.com does it: Best, Excellent, Good, Inaccuracy, Mistake, Blunder. Blunders come with an explanation, the move you should have played, and an offer to take it back so you learn on the spot. A live eval bar tracks the position, and each game ends with an accuracy score.
@@ -54,6 +56,7 @@ Run from the project root (Node required):
 - `node tests/ai.test.js` - rules edge cases (en passant pins, castling rights on rook capture, stalemate, threefold) plus tactical checks (finds forced mates, refuses to hang the queen). All pass.
 - `node tests/openings.test.js` - every book line replayed move by move through the engine. All pass.
 - `node tests/mine-puzzles.js [seconds]` - regenerates the puzzle set with uniqueness proofs.
+- `node tests/basics.test.js` - proves every First Steps lesson is solvable: star squares reachable, drill captures completable, mates present, special moves available. All pass.
 
 ## Honest notes
 
