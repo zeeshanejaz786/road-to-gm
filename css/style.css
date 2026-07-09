@@ -576,6 +576,30 @@ svg { display: block; }
 }
 @keyframes dangerPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 
+/* ---- Urdu rendering ---- */
+.coach-card.ur .coach-text,
+.lang-ur .lesson-intro,
+.lang-ur .lesson-task,
+.lang-ur .lesson-feedback,
+.modal-sub.ur, h3.ur {
+  font-family: 'Noto Nastaliq Urdu', 'Segoe UI', serif;
+  direction: rtl;
+  text-align: right;
+  line-height: 2.35;
+}
+.modal-sub.ur, .lang-ur .lesson-intro { line-height: 2.5; }
+.coach-card.ur .coach-head { flex-direction: row-reverse; }
+/* Urdu piece-name labels: a touch larger and script-friendly */
+.board.show-labels .piece-label:lang(ur),
+.lang-ur .board.show-labels .piece-label {
+  font-family: 'Noto Nastaliq Urdu', 'Segoe UI', sans-serif;
+  font-size: 2.6cqw;
+  padding: 0.3cqw 1.1cqw 0.9cqw;
+  line-height: 1.1;
+}
+.welcome-lang, #lang-seg { direction: ltr; }
+.welcome-lang button[data-lang="ur"], #lang-seg button[data-lang="ur"] { font-family: 'Noto Nastaliq Urdu', serif; }
+
 .arrow-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .arrow-layer line, .arrow-layer polygon { opacity: 0.85; }
 .arrow-gold { stroke: #e9cb70; fill: #e9cb70; filter: drop-shadow(0 1px 4px rgba(0,0,0,.4)); }

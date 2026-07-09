@@ -32,7 +32,8 @@
         takebackOffers: true,
         autoRotate: false,
         beginnerCoach: false, // extra plain-words explanations in coach games
-        pieceLabels: false    // print piece names on the board
+        pieceLabels: false,   // print piece names on the board
+        lang: 'en'            // 'en' | 'ur' — coach & piece-name language
       },
       savedGame: null
     };
@@ -211,16 +212,25 @@
     },
 
     explainRating: function () {
-      App.modal(
-        '<h3>What is a rating?</h3>' +
-        '<p class="modal-sub">Your <b>rating</b> is one number that measures how strong you are at chess. Every player has one. ' +
-        'People who are just learning start near the very bottom and climb from there.</p>' +
-        '<p class="modal-sub">Win a game and your number goes <b>up</b>. Lose and it dips a little — but it never falls below <b>100</b>, ' +
-        'so you can play fearlessly while you learn. Beating a tougher opponent is worth more points.</p>' +
-        '<p class="modal-sub">The ladder climbs all the way to <b>2500 (Magnus Mode)</b>. For reference, brand-new players online sit around ' +
-        '400–800, and solid club players reach 1200–1600. Just keep playing and learning; the number follows.</p>' +
-        '<div class="modal-actions"><button class="btn btn-gold" data-done>Got it</button></div>'
-      ).querySelector('[data-done]').addEventListener('click', App.closeModal);
+      var ur = Store.get().settings.lang === 'ur';
+      var html = ur
+        ? '<h3 class="ur">ریٹنگ کیا ہے؟</h3>' +
+          '<p class="modal-sub ur">آپ کی <b>ریٹنگ</b> ایک نمبر ہے جو بتاتا ہے آپ شطرنج میں کتنے مضبوط ہیں۔ ہر کھلاڑی کی ہوتی ہے۔ ' +
+          'نئے سیکھنے والے بالکل نیچے سے شروع ہو کر اوپر چڑھتے ہیں۔</p>' +
+          '<p class="modal-sub ur">گیم جیتنے پر نمبر <b>بڑھتا</b> ہے، ہارنے پر تھوڑا گرتا ہے — مگر کبھی <b>100</b> سے نیچے نہیں جاتا، ' +
+          'سو بے فکر ہو کر سیکھیں۔ مضبوط مخالف کو ہرانے پر زیادہ پوائنٹ ملتے ہیں۔</p>' +
+          '<p class="modal-sub ur">یہ سیڑھی <b>2500 (Magnus Mode)</b> تک جاتی ہے۔ نئے آن لائن کھلاڑی 400–800، اور اچھے کلب کھلاڑی 1200–1600 کے قریب ہوتے ہیں۔ ' +
+          'بس کھیلتے اور سیکھتے رہیں، نمبر خود بڑھے گا۔</p>' +
+          '<div class="modal-actions"><button class="btn btn-gold" data-done>سمجھ گیا</button></div>'
+        : '<h3>What is a rating?</h3>' +
+          '<p class="modal-sub">Your <b>rating</b> is one number that measures how strong you are at chess. Every player has one. ' +
+          'People who are just learning start near the very bottom and climb from there.</p>' +
+          '<p class="modal-sub">Win a game and your number goes <b>up</b>. Lose and it dips a little — but it never falls below <b>100</b>, ' +
+          'so you can play fearlessly while you learn. Beating a tougher opponent is worth more points.</p>' +
+          '<p class="modal-sub">The ladder climbs all the way to <b>2500 (Magnus Mode)</b>. For reference, brand-new players online sit around ' +
+          '400–800, and solid club players reach 1200–1600. Just keep playing and learning; the number follows.</p>' +
+          '<div class="modal-actions"><button class="btn btn-gold" data-done>Got it</button></div>';
+      App.modal(html).querySelector('[data-done]').addEventListener('click', App.closeModal);
     },
 
     modal: function (html, opts) {
@@ -418,7 +428,16 @@
       // plain-words explanation for brand-new players
       var gentleLine = '';
       if (info.cfg && info.cfg.gentle) {
-        var EXPLAIN = {
+        var ur = Store.get().settings.lang === 'ur';
+        var EXPLAIN = ur ? {
+          'checkmate': 'بادشاہ پر حملہ تھا اور نہ بھاگ سکا، نہ بچاؤ ہوا — یہی شہ مات ہے، اور گیم فوراً ختم۔',
+          'stalemate': 'چال والے کو شہ نہیں تھی مگر کوئی جائز چال بھی نہ تھی۔ یہ اسٹیل میٹ ہے، برابر۔',
+          'resignation': 'ایک کھلاڑی نے ہار مان لی۔ یہ اس کی شکست ہے۔',
+          'time out': 'ایک کھلاڑی کا وقت ختم ہو گیا، جو ہار ہے۔',
+          'threefold repetition': 'بالکل ایک ہی پوزیشن تین بار آئی، سو گیم برابر۔',
+          'fifty-move rule': 'پچاس چالوں تک نہ کوئی مہرہ مرا نہ پیادہ چلا، سو برابر۔',
+          'insufficient material': 'کسی کے پاس بادشاہ پھنسانے کے لیے کافی مہرے نہیں، سو برابر۔'
+        } : {
           'checkmate': 'A King was attacked with no escape, no block, and no rescue. That is checkmate, and it ends the game on the spot.',
           'stalemate': 'The player to move was NOT in check but had no legal move at all. That is stalemate, and it is a draw.',
           'resignation': 'One player gave up. That counts as a loss for them.',
@@ -428,7 +447,7 @@
           'insufficient material': 'Neither side has enough pieces left to ever trap a King, so it is a draw.'
         };
         if (EXPLAIN[st.reason]) {
-          gentleLine = '<p class="modal-sub" style="text-align:center;margin-top:10px">' + EXPLAIN[st.reason] + '</p>';
+          gentleLine = '<p class="modal-sub' + (ur ? ' ur' : '') + '" style="text-align:center;margin-top:10px">' + EXPLAIN[st.reason] + '</p>';
         }
       }
       var m = App.modal(
@@ -768,6 +787,11 @@
         '<h3>Setup</h3>' +
         '<p class="modal-sub">Board, sounds, training wheels, and the coin shop. ' +
         'Balance: <b class="shop-balance">🪙 ' + d.coins + '</b></p>' +
+        '<div class="set-row"><div class="lbl">Language <small>Coach &amp; piece names / کوچ اور مہروں کے نام</small></div>' +
+        '<div class="seg" id="lang-seg">' +
+        '<button data-lang="en"' + (s.lang !== 'ur' ? ' class="active"' : '') + '>English</button>' +
+        '<button data-lang="ur"' + (s.lang === 'ur' ? ' class="active"' : '') + '>اردو</button>' +
+        '</div></div>' +
         '<div class="set-row"><div class="lbl">Board theme<small>Win games and puzzles to unlock the rest.</small></div>' +
         '<div class="swatches">' + themeHtml + '</div></div>' +
         '<div class="set-row" style="flex-direction:column;align-items:stretch"><div class="lbl">Your avatar' +
@@ -830,11 +854,22 @@
           App.applySettings();
         });
       });
+      var langSeg = m.querySelector('#lang-seg');
+      if (langSeg) langSeg.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        langSeg.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        s.lang = b.dataset.lang;
+        Store.save();
+        App.applySettings();
+      });
       m.querySelector('[data-done]').addEventListener('click', App.closeModal);
     },
 
     applySettings: function () {
       var s = Store.get().settings;
+      if (window.I18N) window.I18N.setLang(s.lang);
+      document.body.classList.toggle('lang-ur', s.lang === 'ur');
       Sound.setEnabled(s.sounds);
       if (App.game && App.game.board) {
         App.game.board.setTheme(s.boardTheme);
@@ -848,6 +883,11 @@
       }
       if (App.basics && App.basics.board) {
         App.basics.board.setTheme(s.boardTheme);
+        if (App.basics.g) App.basics.board.render(App.basics.g, true);
+      }
+      // refresh piece labels to the current language on a live game
+      if (App.game && App.game.board && App.game.active && App.game.g && App.game.viewPly === -1) {
+        App.game.board.render(App.game.g, true);
       }
       var si = document.getElementById('sound-icon');
       if (si) si.innerHTML = '<use href="#i-sound' + (s.sounds ? '' : '-off') + '"/>';
@@ -923,30 +963,51 @@
       if (!Store.get().firstRunDone) {
         Store.get().firstRunDone = true;
         Store.save();
-        var wm = App.modal(
-          '<h3>Welcome to Road to GM ♞</h3>' +
-          '<p class="modal-sub">One quick question so we start you in the right place. ' +
-          'Have you played chess before?</p>' +
-          '<div class="modal-actions">' +
-          '<button class="btn btn-gold" data-zero>Never, teach me from zero</button>' +
-          '<button class="btn btn-ghost" data-know>I know the moves</button>' +
-          '</div>', { sticky: true });
-        wm.querySelector('[data-zero]').addEventListener('click', function () {
-          var d = Store.get();
-          // brand-new player: start at the very bottom and turn on the gentle coach
-          d.rating = 100; d.peak = 100;
-          d.settings.beginnerCoach = true;
-          d.settings.pieceLabels = true;
-          Store.save();
-          App.applySettings();
-          App.closeModal();
-          App.showScreen('basics');
-        });
-        wm.querySelector('[data-know]').addEventListener('click', function () {
-          App.closeModal();
-          App.toast('Great. The Ladder awaits. First Steps is always there under Basics if you want a refresher.');
-        });
+        App.showWelcome();
       }
+    },
+
+    showWelcome: function () {
+      var ur = Store.get().settings.lang === 'ur';
+      var wm = App.modal(
+        '<div class="seg welcome-lang" id="welcome-lang" style="margin-bottom:14px">' +
+        '<button data-lang="en"' + (!ur ? ' class="active"' : '') + '>English</button>' +
+        '<button data-lang="ur"' + (ur ? ' class="active"' : '') + '>اردو</button>' +
+        '</div>' +
+        (ur
+          ? '<h3 class="ur">خوش آمدید — Road to GM ♞</h3>' +
+            '<p class="modal-sub ur">ایک چھوٹا سوال تاکہ آپ کو صحیح جگہ سے شروع کریں۔ کیا آپ نے پہلے شطرنج کھیلی ہے؟</p>' +
+            '<div class="modal-actions">' +
+            '<button class="btn btn-gold" data-zero>نہیں، مجھے بالکل شروع سے سکھائیں</button>' +
+            '<button class="btn btn-ghost" data-know>مجھے چالیں آتی ہیں</button></div>'
+          : '<h3>Welcome to Road to GM ♞</h3>' +
+            '<p class="modal-sub">One quick question so we start you in the right place. Have you played chess before?</p>' +
+            '<div class="modal-actions">' +
+            '<button class="btn btn-gold" data-zero>Never, teach me from zero</button>' +
+            '<button class="btn btn-ghost" data-know>I know the moves</button></div>'),
+        { sticky: true });
+      wm.querySelector('#welcome-lang').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        Store.get().settings.lang = b.dataset.lang;
+        Store.save(); App.applySettings();
+        App.showWelcome(); // re-render in the chosen language
+      });
+      wm.querySelector('[data-zero]').addEventListener('click', function () {
+        var d = Store.get();
+        d.rating = 100; d.peak = 100;
+        d.settings.beginnerCoach = true;
+        d.settings.pieceLabels = true;
+        Store.save();
+        App.applySettings();
+        App.closeModal();
+        App.showScreen('basics');
+      });
+      wm.querySelector('[data-know]').addEventListener('click', function () {
+        App.closeModal();
+        App.toast(Store.get().settings.lang === 'ur'
+          ? 'بہت خوب۔ سیڑھی تیار ہے۔ First Steps ہمیشہ Basics میں موجود ہے۔'
+          : 'Great. The Ladder awaits. First Steps is always there under Basics if you want a refresher.');
+      });
     }
   };
 

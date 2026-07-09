@@ -92,6 +92,16 @@
     6: ['King', 'The most important piece. He only steps one square at a time. If he is trapped, the game is over, so keep him safe!']
   };
 
+  // gentle, in Urdu — for brand-new players learning in their own language
+  var PHRASES_GENTLE_UR = {
+    best: ['بہترین چال! بالکل صحیح سوچ۔', 'زبردست۔ اس سے اچھی کوئی چال نہ تھی۔', 'شاباش! خود کو داد دیں۔'],
+    excellent: ['بہت اچھی چال۔ آپ سیکھ رہے ہیں۔', 'عمدہ انتخاب۔', 'بہت درست۔'],
+    good: ['ٹھیک چال۔ ایک اور مضبوط چال بھی موجود تھی۔', 'چلے گا! کوئی نقصان نہیں ہوا۔', 'مضبوط، توازن قائم ہے۔'],
+    inaccuracy: ['ذرا کمزور جگہ۔ اگلی بار تھوڑا اور دیکھ لیں کہ مخالف کیا کرے گا۔', 'برا نہیں، مگر پوزیشن ذرا پھسلی۔', 'قریب تھے! ایک بہتر خانہ موجود تھا۔'],
+    mistake: ['اوہو، اس سے مخالف کو موقع مل گیا۔ اگلی بار دیکھیں: میرا کوئی مہرہ تو نہیں مارا جا سکتا؟', 'خیال رکھیں! چال سے پہلے ہر مہرے کو دیکھیں کہ محفوظ ہے یا نہیں۔', 'تھوڑا نقصان۔ سب سے ہوتا ہے۔ دیکھیں مخالف اب کس پر حملہ کر رہا ہے۔'],
+    blunder: ['اوہو، اس چال سے مفت میں کچھ چلا گیا! دیکھیں: ابھی آپ کا کون سا مہرہ مارا جا سکتا ہے؟', 'بڑی غلطی! فکر نہ کریں، ہر چیمپئن نے ہزار بار کی ہے۔ سوچیں: مخالف کی پچھلی چال نے کس پر حملہ کیا؟', 'اس سے مہرہ چلا جاتا ہے۔ سانس لیں۔ چال سے پہلے ہمیشہ دیکھیں کہ نئی جگہ مہرہ محفوظ رہے گا یا نہیں۔']
+  };
+
   function classify(cpLoss, wasBestMove) {
     if (wasBestMove) return VERDICTS[0];
     for (var i = 0; i < VERDICTS.length; i++) {
@@ -100,8 +110,9 @@
     return VERDICTS[VERDICTS.length - 1];
   }
 
-  function phrase(verdictId, gentle) {
-    var list = (gentle ? PHRASES_GENTLE : PHRASES)[verdictId] || [''];
+  function phrase(verdictId, gentle, isUr) {
+    var table = (isUr && gentle) ? PHRASES_GENTLE_UR : (gentle ? PHRASES_GENTLE : PHRASES);
+    var list = table[verdictId] || [''];
     return list[(Math.random() * list.length) | 0];
   }
 

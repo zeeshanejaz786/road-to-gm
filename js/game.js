@@ -5,6 +5,7 @@
   'use strict';
   var R = window.RTG, AI = window.RTGAI, Coach = window.RTGCoach,
     Book = window.RTGBOOK, Sound = window.RTGSound, Narrator = window.RTGNarrator;
+  function UR() { return window.I18N && window.I18N.isUr(); }
 
   var GLYPHS = { 1: '♟', 2: '♞', 3: '♝', 4: '♜', 5: '♛', 6: '♚' };
 
@@ -149,10 +150,18 @@
     var explainBtn = document.getElementById('btn-explain');
     if (explainBtn) explainBtn.style.display = this.coachOn ? '' : 'none';
     if (this.gentle && this.g.ply === 0) {
-      this.coachSay('Welcome! You are <b>White</b>, so you move first. ' +
-        'Click any of your pieces to see exactly where it can go and whether it is safe. ' +
-        'Stuck? Press <b>Explain</b> to have me read the whole board, or <b>Hint</b> for the best move and why. ' +
-        '<br><br>Remember the one goal: <b>trap their King</b>.', 'explain');
+      if (UR()) {
+        this.coachSay('خوش آمدید! آپ <b>سفید</b> ہیں، سو پہلی چال آپ کی ہے۔ ' +
+          'اپنے کسی بھی مہرے پر کلک کریں تاکہ دیکھ سکیں وہ کہاں جا سکتا ہے اور محفوظ ہے یا نہیں۔ ' +
+          'اٹکیں تو <b>Explain</b> دبائیں (میں پوری بساط پڑھ دوں گا) یا <b>Hint</b> (بہترین چال اور وجہ)۔ ' +
+          'غلطی ہو جائے تو <b>Undo</b> سے چال واپس لے لیں — یہ مفت ہے۔<br><br>ایک ہی مقصد یاد رکھیں: <b>مخالف کے بادشاہ کو پھنسانا</b>۔', 'explain');
+      } else {
+        this.coachSay('Welcome! You are <b>White</b>, so you move first. ' +
+          'Click any of your pieces to see exactly where it can go and whether it is safe. ' +
+          'Stuck? Press <b>Explain</b> to have me read the whole board, or <b>Hint</b> for the best move and why. ' +
+          'Made a mistake? <b>Undo</b> takes it back — it is free while you learn. ' +
+          '<br><br>Remember the one goal: <b>trap their King</b>.', 'explain');
+      }
     }
     this.renderMovelist();
     this.renderBars();
@@ -167,6 +176,7 @@
       this.scheduleBotMove(420);
     } else {
       this.refreshAnalysis();
+      this.armNudge();
     }
     if (this.clock && !this.clock.running) this.switchClock();
     this.save();
@@ -177,6 +187,7 @@
     if (!this.gentle || !code || this.over || this.viewPly !== -1) return;
     var text = Narrator.describePiece(this.g, sq, this.userColor);
     if (text) this.coachSay(text, 'piece');
+    this.armNudge();
   };
 
   // the persistent coach panel: latest message stays until replaced
@@ -184,8 +195,8 @@
     if (!this.coachOn) return;
     var el = this.ui.coachCard;
     el.hidden = false;
-    el.className = 'coach-card' + (kind ? ' coach-' + kind : '');
-    el.innerHTML = '<div class="coach-head"><span class="coach-badge">🎓 Coach</span></div>' +
+    el.className = 'coach-card' + (kind ? ' coach-' + kind : '') + (UR() ? ' ur' : '');
+    el.innerHTML = '<div class="coach-head"><span class="coach-badge">🎓 ' + (UR() ? 'کوچ' : 'Coach') + '</span></div>' +
       '<div class="coach-text">' + html + '</div>';
   };
 
@@ -204,25 +215,74 @@
   // after the opponent replies, warn a beginner about check / hanging pieces
   P.narrateAfterBot = function () {
     if (!this.gentle || this.over) return;
+    var self = this, u = UR();
     if (this.g.inCheck(this.userColor)) {
       var ksq = this.g.kingSq[this.userColor];
       var atk = Narrator.findAttackers(this.g, ksq, this.userColor ^ 1);
-      var by = atk.length ? (' by the ' + Narrator.pieceName(this.g.board[atk[0]]) + ' on ' + R.algebraic(atk[0])) : '';
       this.board.setDanger([ksq]);
-      this.coachSay('🚨 <b>Check!</b> Your King on ' + R.algebraic(ksq) + ' is attacked' + by +
-        '. You must respond: move the King, block the line, or capture the attacker.', 'warn');
+      if (u) {
+        var byU = atk.length ? ('، حملہ ' + Narrator.pieceName(this.g.board[atk[0]]) + ' (' + R.algebraic(atk[0]) + ') سے ہے') : '';
+        this.coachSay('🚨 <b>شہ!</b> آپ کے بادشاہ (' + R.algebraic(ksq) + ') پر حملہ ہے' + byU +
+          '۔ جواب دیں: بادشاہ ہٹائیں، بیچ میں مہرہ رکھیں، یا حملہ آور کو ماریں۔', 'warn');
+      } else {
+        var by = atk.length ? (' by the ' + Narrator.pieceName(this.g.board[atk[0]]) + ' on ' + R.algebraic(atk[0])) : '';
+        this.coachSay('🚨 <b>Check!</b> Your King on ' + R.algebraic(ksq) + ' is attacked' + by +
+          '. You must respond: move the King, block the line, or capture the attacker.', 'warn');
+      }
       return;
     }
     var hang = Narrator.hangingSquares(this.g, this.userColor);
     this.board.setDanger(hang);
     if (hang.length) {
-      var self = this;
-      var names = hang.map(function (s) { return '<b>' + Narrator.pieceName(self.g.board[s]) + ' on ' + R.algebraic(s) + '</b>'; });
-      var list = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
-      this.coachSay('⚠️ <b>Watch out!</b> Your ' + list + ' ' + (hang.length > 1 ? 'are' : 'is') +
-        ' under attack with nothing defending ' + (hang.length > 1 ? 'them' : 'it') +
-        '. Move to safety or add a defender, or the opponent takes ' + (hang.length > 1 ? 'them' : 'it') + ' for free.', 'warn');
+      if (u) {
+        var listU = window.I18N.joinList(hang.map(function (s) { return '<b>' + Narrator.pieceName(self.g.board[s]) + ' (' + R.algebraic(s) + ')</b>'; }));
+        this.coachSay('⚠️ <b>خیال رکھیں!</b> آپ کا ' + listU + ' حملے میں ہے اور کوئی اسے نہیں بچا رہا۔ ' +
+          'اسے محفوظ کریں یا محافظ دیں، ورنہ مخالف مفت میں مار لے گا۔', 'warn');
+      } else {
+        var names = hang.map(function (s) { return '<b>' + Narrator.pieceName(self.g.board[s]) + ' on ' + R.algebraic(s) + '</b>'; });
+        var list = window.I18N.joinList(names);
+        this.coachSay('⚠️ <b>Watch out!</b> Your ' + list + ' ' + (hang.length > 1 ? 'are' : 'is') +
+          ' under attack with nothing defending ' + (hang.length > 1 ? 'them' : 'it') +
+          '. Move to safety or add a defender, or the opponent takes ' + (hang.length > 1 ? 'them' : 'it') + ' for free.', 'warn');
+      }
     }
+  };
+
+  // ---- guided "your move" nudge (gentle mode) --------------------------
+  var NUDGE_MS = 15000;
+  P.armNudge = function () {
+    this.clearNudge();
+    if (!this.gentle || this.over) return;
+    if (this.mode === 'bot' && this.g.turn !== this.userColor) return;
+    var self = this;
+    this._nudgeTimer = setTimeout(function () { self.fireNudge(); }, NUDGE_MS);
+  };
+  P.clearNudge = function () {
+    if (this._nudgeTimer) { clearTimeout(this._nudgeTimer); this._nudgeTimer = null; }
+  };
+  P.fireNudge = function () {
+    if (!this.gentle || this.over || this.viewPly !== -1) return;
+    if (this.mode === 'bot' && this.g.turn !== this.userColor) return;
+    // suggest a piece to *consider* (developing piece first) without spoiling the single best move
+    var legal = this.g.legalMoves();
+    if (!legal.length) return;
+    var pick = null;
+    for (var i = 0; i < legal.length; i++) {
+      var pt = R.mvPiece(legal[i]);
+      if ((pt === R.KNIGHT || pt === R.BISHOP)) { pick = legal[i]; break; }
+    }
+    if (!pick) pick = legal[(Math.random() * legal.length) | 0];
+    var fromSq = R.mvFrom(pick);
+    var nm = Narrator.pieceName(this.g.board[fromSq]);
+    this.board.flash(fromSq, 'sel');
+    if (UR()) {
+      this.coachSay('آپ کی باری ہے — جلدی نہیں۔ کسی بھی مہرے پر کلک کر کے اس کی چالیں دیکھیں۔ ' +
+        'مثلاً آپ کا <b>' + nm + '</b> (' + R.algebraic(fromSq) + ') چل سکتا ہے۔ بہترین چال کے لیے <b>Hint</b> ہے۔', 'explain');
+    } else {
+      this.coachSay('Your move — no rush. Click any piece to see where it can go. ' +
+        'For example, your <b>' + nm + '</b> on ' + R.algebraic(fromSq) + ' can move. Want the best move? Press <b>Hint</b>.', 'explain');
+    }
+    this.armNudge(); // keep gently reminding
   };
 
   P.canUserMove = function (color) {
@@ -439,6 +499,7 @@
     if (!this.active || this.over || this.viewPly !== -1) return;
     var m = this.g.findMove(from, to, promo);
     if (!m) { Sound.illegal(); this.board.clearSelection(); return; }
+    this.clearNudge();
     var prevAnalysis = this.lastAnalysis; // analysis of the position BEFORE this move
     this.applyMove(m);
     if (this.over) return;
@@ -478,7 +539,8 @@
     // gentle mode: cheer when the player delivers a check (their-king case
     // is handled with more detail by narrateAfterBot in the coach panel)
     if (this.gentle && this.g.inCheck() && this.g.turn !== this.userColor) {
-      App.toast('Check! You are attacking their King — they must deal with it right now.', 3600);
+      App.toast(UR() ? 'شہ! آپ مخالف کے بادشاہ پر حملہ کر رہے ہیں — اسے فوراً جواب دینا پڑے گا۔'
+        : 'Check! You are attacking their King — they must deal with it right now.', 3600);
     }
 
     if (this.clock) {
@@ -574,11 +636,12 @@
       var offerOk = App.store.get().settings.takebackOffers &&
         (verdict.id === 'blunder' || verdict.id === 'mistake') && !self.over;
       if (offerOk) {
+        var u = UR();
         App.confirmModal({
-          title: self.gentle ? 'Wait, little pause!' : (verdict.id === 'blunder' ? 'That one stings' : 'Hold on'),
-          sub: 'Coach: "' + Coach.phrase(verdict.id, self.gentle) + '" Best was <b>' + before.san +
-            '</b>. Take the move back and find it?',
-          yes: 'Take it back', no: 'Play on',
+          title: u ? 'ذرا رکیں!' : (self.gentle ? 'Wait, little pause!' : (verdict.id === 'blunder' ? 'That one stings' : 'Hold on')),
+          sub: (u ? 'کوچ: "' + Coach.phrase(verdict.id, self.gentle, true) + '" بہترین چال <b>' + before.san + '</b> تھی۔ چال واپس لے کر ڈھونڈیں؟'
+            : 'Coach: "' + Coach.phrase(verdict.id, self.gentle, false) + '" Best was <b>' + before.san + '</b>. Take the move back and find it?'),
+          yes: u ? 'واپس لیں' : 'Take it back', no: u ? 'کھیلتے رہیں' : 'Play on',
           onYes: function () { self.takeback(1); },
           onNo: function () { self.scheduleBotMove(160); }
         });
@@ -604,7 +667,7 @@
       '<span class="coach-move">' + mm.san +
       (mm.cpLoss > 9 ? ' · −' + (mm.cpLoss / 100).toFixed(1) : '') + '</span>' +
       '</div>' +
-      '<div class="coach-text">' + Coach.phrase(verdict.id, this.gentle) + '</div>' +
+      '<div class="coach-text">' + Coach.phrase(verdict.id, this.gentle, UR()) + '</div>' +
       bestLine;
     var self = this;
     var btn = el.querySelector('[data-showbest]');
@@ -664,6 +727,7 @@
         self.checkPracticeStatus();
         self.refreshAnalysis();
         self.narrateAfterBot();
+        self.armNudge();
       }
     }, delay || 200);
   };
@@ -696,12 +760,13 @@
     if (this.mode === 'bot' && this.g.turn !== this.userColor) return;
     if (this.mode === 'bot') {
       if (App.store.get().coins < HINT_COST) {
-        App.toast('Hints cost 🪙 ' + HINT_COST + '. Win games or solve puzzles to earn coins.');
+        App.toast(UR() ? ('اشارے کی قیمت 🪙 ' + HINT_COST + ' ہے۔ گیم جیتیں یا پہیلیاں حل کر کے سکے کمائیں۔')
+          : ('Hints cost 🪙 ' + HINT_COST + '. Win games or solve puzzles to earn coins.'));
         return;
       }
     }
-    if (this.coachOn) this.coachSay('💡 Let me look at the board…', 'hint');
-    else App.toast('Thinking…');
+    if (this.coachOn) this.coachSay(UR() ? '💡 ذرا بساط دیکھ لوں…' : '💡 Let me look at the board…', 'hint');
+    else App.toast(UR() ? 'سوچ رہا ہوں…' : 'Thinking…');
     setTimeout(function () {
       var r = null;
       try { r = AI.analyze(self.g, 700); } catch (e) { }
@@ -714,10 +779,10 @@
       self.board.showArrow(R.mvFrom(r.move), R.mvTo(r.move), 'arrow-gold');
       if (self.coachOn) {
         var why = Narrator.explainMove(self.g, r.move, self.userColor, r.mate, san);
-        self.coachSay('💡 <b>Hint</b> — see the gold arrow.<br>' + why +
-          (self.mode === 'bot' ? '<br><small>(−' + HINT_COST + ' 🪙)</small>' : ''), 'hint');
+        var head = UR() ? '💡 <b>اشارہ</b> — سنہری تیر دیکھیں۔<br>' : '💡 <b>Hint</b> — see the gold arrow.<br>';
+        self.coachSay(head + why + (self.mode === 'bot' ? '<br><small>(−' + HINT_COST + ' 🪙)</small>' : ''), 'hint');
       } else {
-        App.toast('Consider ' + san);
+        App.toast((UR() ? 'یہ چال دیکھیں: ' : 'Consider ') + san);
       }
     }, 40);
   };
@@ -762,6 +827,7 @@
     if (this.clock) this.switchClock();
     this.save();
     this.refreshAnalysis();
+    this.armNudge();
     // if after takeback it's still the bot's turn (local weirdness), let it move
     if (this.mode === 'bot' && this.g.turn !== this.userColor) this.scheduleBotMove(300);
   };
@@ -790,6 +856,7 @@
 
   P.exit = function () {
     var self = this;
+    this.clearNudge();
     if (this.active && !this.over && this.g.ply > 1 && this.mode === 'bot') {
       App.confirmModal({
         title: 'Leave the board?',
@@ -806,6 +873,7 @@
   // ---- history viewing -----------------------------------------------------------
   P.setView = function (ply, keepArrows) {
     // ply: -1 live, -2 start, 0..n-1 after that move
+    this.clearNudge();
     if (ply === -1) {
       this.viewPly = -1;
       this.board.interactive = true;
@@ -816,6 +884,7 @@
       } else this.board.setLastMove(-1, -1);
       this.updateCheckMark();
       this.highlightThreats();
+      this.armNudge();
     } else {
       this.board.clearDanger();
       var upto = ply === -2 ? 0 : ply + 1;
@@ -870,6 +939,7 @@
     if (this.over) return;
     this.over = true;
     this.pendingBot = false;
+    this.clearNudge();
     if (this.clock) this.clock.running = null;
     this.updateActiveBar();
     this.setThinking(0, false); this.setThinking(1, false);

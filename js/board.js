@@ -71,11 +71,15 @@
     if (this.game) this.render(this.game, true);
   };
 
+  BoardView.prototype._labelFor = function (code) {
+    return (window.I18N && window.I18N.pieceName) ? window.I18N.pieceName(code) : LABELS[code & 7];
+  };
+
   BoardView.prototype._setGlyph = function (el, code) {
     var g = el.querySelector('.pglyph');
     if (g) g.textContent = GLYPHS[code & 7];
     var lab = el.querySelector('.piece-label');
-    if (lab) lab.textContent = LABELS[code & 7];
+    if (lab) lab.textContent = this._labelFor(code);
     el.dataset.code = code;
   };
 
@@ -148,6 +152,9 @@
       if (!this.pieceEls[s]) {
         this.pieceEls[s] = this._makePiece(want[s], s, instant);
       } else {
+        // keep the label text in sync with the current language
+        var lab = this.pieceEls[s].querySelector('.piece-label');
+        if (lab) lab.textContent = this._labelFor(want[s]);
         this._place(this.pieceEls[s], s, instant);
       }
     }
@@ -166,7 +173,7 @@
     p.appendChild(glyph);
     var lab = document.createElement('span');
     lab.className = 'piece-label';
-    lab.textContent = LABELS[code & 7];
+    lab.textContent = this._labelFor(code);
     p.appendChild(lab);
     p.dataset.code = code;
     this._place(p, sq, true);
