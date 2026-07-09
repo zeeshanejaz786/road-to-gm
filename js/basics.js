@@ -209,8 +209,10 @@
       interactive: true,
       theme: App.store.get().settings.boardTheme,
       showLegal: true,
+      showLabels: true,
       onUserMove: function (f, t, p) { self.onUserMove(f, t, p); },
       onSquareClick: function (sq) { self.onSquareClick(sq); },
+      onSelect: function (sq, code) { self.onSelect(sq, code); },
       canMove: function () { return !self.solvedNow; }
     });
     this.ui = {
@@ -308,8 +310,20 @@
     this.ui.task.innerHTML = '👉 ' + html;
   };
   P.setFeedback = function (text, cls) {
-    this.ui.feedback.textContent = text;
+    this.ui.feedback.innerHTML = text;
     this.ui.feedback.className = 'lesson-feedback' + (cls ? ' ' + cls : '');
+  };
+
+  // narrate a piece the learner picks up during a movement drill
+  P.onSelect = function (sq, code) {
+    if (!code || this.solvedNow) return;
+    var l = this.lesson;
+    if (!l || ['collect', 'capture', 'escape', 'mate1', 'castle', 'promote', 'ep'].indexOf(l.type) < 0) return;
+    if (R.pieceColor(code) !== R.WHITE) return; // learner is always White here
+    var N = window.RTGNarrator;
+    if (!N) return;
+    var text = N.describePiece(this.g, sq, R.WHITE);
+    if (text) this.setFeedback(text, '');
   };
 
   // ---- click-the-square drill --------------------------------------

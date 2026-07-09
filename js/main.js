@@ -30,7 +30,9 @@
         sounds: true,
         coachDefault: true,
         takebackOffers: true,
-        autoRotate: false
+        autoRotate: false,
+        beginnerCoach: false, // extra plain-words explanations in coach games
+        pieceLabels: false    // print piece names on the board
       },
       savedGame: null
     };
@@ -205,7 +207,20 @@
       App._toastTimer = setTimeout(function () {
         t.classList.remove('show');
         setTimeout(function () { t.remove(); }, 300);
-      }, ms || 2600);
+      }, ms || 3400);
+    },
+
+    explainRating: function () {
+      App.modal(
+        '<h3>What is a rating?</h3>' +
+        '<p class="modal-sub">Your <b>rating</b> is one number that measures how strong you are at chess. Every player has one. ' +
+        'People who are just learning start near the very bottom and climb from there.</p>' +
+        '<p class="modal-sub">Win a game and your number goes <b>up</b>. Lose and it dips a little — but it never falls below <b>100</b>, ' +
+        'so you can play fearlessly while you learn. Beating a tougher opponent is worth more points.</p>' +
+        '<p class="modal-sub">The ladder climbs all the way to <b>2500 (Magnus Mode)</b>. For reference, brand-new players online sit around ' +
+        '400–800, and solid club players reach 1200–1600. Just keep playing and learning; the number follows.</p>' +
+        '<div class="modal-actions"><button class="btn btn-gold" data-done>Got it</button></div>'
+      ).querySelector('[data-done]').addEventListener('click', App.closeModal);
     },
 
     modal: function (html, opts) {
@@ -758,6 +773,8 @@
         '<div class="set-row" style="flex-direction:column;align-items:stretch"><div class="lbl">Your avatar' +
         '<small>Shown on your side of the board.</small></div>' +
         '<div class="avatar-grid">' + avatarHtml + '</div></div>' +
+        row('beginnerCoach', 'Beginner coach mode', 'Full plain-words help in coached games: explains each piece you touch, warns about danger, and reads the board. Turn this off once you can play on your own.') +
+        row('pieceLabels', 'Piece name labels', 'Print the name (Pawn, Knight…) on every piece so you never forget which is which.') +
         row('showLegal', 'Show legal moves', 'Dots on every square a selected piece can reach.') +
         row('sounds', 'Sounds', 'Clicks, captures, and the little victory tune.') +
         row('takebackOffers', 'Blunder takebacks', 'Coach offers to undo mistakes and blunders in bot games.') +
@@ -822,10 +839,15 @@
       if (App.game && App.game.board) {
         App.game.board.setTheme(s.boardTheme);
         App.game.board.showLegal = s.showLegal;
+        // don't strip labels mid-game if the current game forced them on
+        App.game.board.setLabels(s.pieceLabels || (App.game.active && App.game.gentle));
       }
       if (App.puzzles && App.puzzles.board) {
         App.puzzles.board.setTheme(s.boardTheme);
         App.puzzles.board.showLegal = s.showLegal;
+      }
+      if (App.basics && App.basics.board) {
+        App.basics.board.setTheme(s.boardTheme);
       }
       var si = document.getElementById('sound-icon');
       if (si) si.innerHTML = '<use href="#i-sound' + (s.sounds ? '' : '-off') + '"/>';
@@ -851,6 +873,9 @@
       document.querySelectorAll('[data-action="local-game"]').forEach(function (b) {
         b.addEventListener('click', App.startLocalGame);
       });
+
+      var med = document.getElementById('medallion');
+      if (med) { med.style.cursor = 'pointer'; med.title = 'What is my rating?'; med.addEventListener('click', App.explainRating); }
 
       // setup segments
       document.getElementById('seg-color').addEventListener('click', function (e) {
@@ -907,6 +932,13 @@
           '<button class="btn btn-ghost" data-know>I know the moves</button>' +
           '</div>', { sticky: true });
         wm.querySelector('[data-zero]').addEventListener('click', function () {
+          var d = Store.get();
+          // brand-new player: start at the very bottom and turn on the gentle coach
+          d.rating = 100; d.peak = 100;
+          d.settings.beginnerCoach = true;
+          d.settings.pieceLabels = true;
+          Store.save();
+          App.applySettings();
           App.closeModal();
           App.showScreen('basics');
         });

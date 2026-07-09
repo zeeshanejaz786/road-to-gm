@@ -6,6 +6,7 @@
   var R = window.RTG;
 
   var GLYPHS = { 1: '♟', 2: '♞', 3: '♝', 4: '♜', 5: '♛', 6: '♚' };
+  var LABELS = { 1: 'Pawn', 2: 'Knight', 3: 'Bishop', 4: 'Rook', 5: 'Queen', 6: 'King' };
 
   function BoardView(el, opts) {
     this.el = el;
@@ -22,7 +23,9 @@
     this.lastFrom = -1; this.lastTo = -1;
     this.checkSq = -1;
     this.clickMode = false; // when true, taps report squares instead of moving pieces
+    this.showLabels = !!this.opts.showLabels;
     this.stars = [];
+    this.danger = [];
     this._drag = null;
     this._build();
   }
@@ -30,6 +33,7 @@
   BoardView.prototype._build = function () {
     var el = this.el;
     el.classList.add('board');
+    el.classList.toggle('show-labels', this.showLabels);
     el.dataset.btheme = this.theme;
     el.innerHTML = '';
     this.sqLayer = document.createElement('div');
@@ -58,6 +62,21 @@
   BoardView.prototype.setTheme = function (t) {
     this.theme = t;
     this.el.dataset.btheme = t;
+  };
+
+  BoardView.prototype.setLabels = function (on) {
+    if (this.showLabels === !!on) return;
+    this.showLabels = !!on;
+    this.el.classList.toggle('show-labels', this.showLabels);
+    if (this.game) this.render(this.game, true);
+  };
+
+  BoardView.prototype._setGlyph = function (el, code) {
+    var g = el.querySelector('.pglyph');
+    if (g) g.textContent = GLYPHS[code & 7];
+    var lab = el.querySelector('.piece-label');
+    if (lab) lab.textContent = LABELS[code & 7];
+    el.dataset.code = code;
   };
 
   // map board square (0x88) <-> screen cell (col,row from top-left)
@@ -141,7 +160,14 @@
     var p = document.createElement('div');
     var color = (code & 8) ? 'b' : 'w';
     p.className = 'piece ' + color + (instant ? ' no-anim' : '');
-    p.textContent = GLYPHS[code & 7];
+    var glyph = document.createElement('span');
+    glyph.className = 'pglyph';
+    glyph.textContent = GLYPHS[code & 7];
+    p.appendChild(glyph);
+    var lab = document.createElement('span');
+    lab.className = 'piece-label';
+    lab.textContent = LABELS[code & 7];
+    p.appendChild(lab);
     p.dataset.code = code;
     this._place(p, sq, true);
     this.pieceLayer.appendChild(p);
@@ -185,9 +211,7 @@
     this.pieceEls[to] = el;
     this._place(el, to, false);
     if (move & R.F_PROMO) {
-      var code = game.board[to];
-      el.textContent = GLYPHS[code & 7];
-      el.dataset.code = code;
+      this._setGlyph(el, game.board[to]);
     }
     // castle: move rook too
     if (move & R.F_CASTLE) {
@@ -216,6 +240,10 @@
     for (var i = 0; i < this.stars.length; i++) {
       var d = this.squares[this.stars[i]];
       if (d) d.classList.add('star');
+    }
+    for (var j = 0; j < this.danger.length; j++) {
+      var dd = this.squares[this.danger[j]];
+      if (dd) dd.classList.add('danger');
     }
   };
   BoardView.prototype.setLastMove = function (from, to) {
@@ -269,6 +297,21 @@
       if (d) d.classList.remove('star');
     }
     this.stars = [];
+  };
+  BoardView.prototype.setDanger = function (list) {
+    this.clearDanger();
+    this.danger = (list || []).slice();
+    for (var i = 0; i < this.danger.length; i++) {
+      var d = this.squares[this.danger[i]];
+      if (d) d.classList.add('danger');
+    }
+  };
+  BoardView.prototype.clearDanger = function () {
+    for (var i = 0; i < this.danger.length; i++) {
+      var d = this.squares[this.danger[i]];
+      if (d) d.classList.remove('danger');
+    }
+    this.danger = [];
   };
   BoardView.prototype.shake = function () {
     this.el.classList.remove('shake');

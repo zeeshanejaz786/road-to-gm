@@ -93,6 +93,11 @@
       <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
       <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".5"/>
     </symbol>
+    <symbol id="i-explain" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="12" cy="8.2" r="1.2" fill="currentColor"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M12 11.4v5.2"/>
+    </symbol>
     <symbol id="i-sprout" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
         d="M12 21v-8M12 13c0-4 2.5-6.5 7-6.5 0 4.5-2.5 6.5-7 6.5zM12 11c0-3.2-2-5.2-5.6-5.2 0 3.6 2 5.2 5.6 5.2zM7 21h10"/>
@@ -253,6 +258,7 @@
             <button class="icon-btn live-btn" id="nav-live" title="Back to live" hidden><svg><use href="#i-live"/></svg><span>Live</span></button>
           </div>
           <div class="game-controls">
+            <button class="ctl-btn" id="btn-explain"><svg><use href="#i-explain"/></svg>Explain</button>
             <button class="ctl-btn" id="btn-hint"><svg><use href="#i-hint"/></svg>Hint</button>
             <button class="ctl-btn" id="btn-undo"><svg><use href="#i-undo"/></svg>Undo</button>
             <button class="ctl-btn" id="btn-flip"><svg><use href="#i-flip"/></svg>Flip</button>
@@ -356,6 +362,7 @@
 
 <script src="js/engine.js"></script>
 <script src="js/ai.js"></script>
+<script src="js/narrator.js"></script>
 <script src="js/openings.js"></script>
 <script src="js/puzzles-data.js"></script>
 <script src="js/sound.js"></script>

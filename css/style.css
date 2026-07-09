@@ -530,19 +530,51 @@ svg { display: block; }
 .piece {
   position: absolute;
   width: 12.5%; height: 12.5%;
-  display: grid; place-items: center;
-  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'DejaVu Sans', serif;
-  font-size: 9.6cqw;
-  line-height: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   pointer-events: auto;
   cursor: grab;
   transition: transform .16s cubic-bezier(.3,.9,.4,1);
   z-index: 2;
 }
+.piece .pglyph {
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'DejaVu Sans', serif;
+  font-size: 9.6cqw;
+  line-height: 1;
+}
+.piece-label {
+  display: none;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 2.05cqw;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  margin-top: 0.4cqw;
+  padding: 0.5cqw 0.9cqw;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.board.show-labels .piece { justify-content: center; gap: 0.2cqw; }
+.board.show-labels .piece .pglyph { font-size: 8.1cqw; }
+.board.show-labels .piece-label { display: block; }
+.piece.w .piece-label { color: #17140c; background: rgba(247, 240, 220, 0.82); }
+.piece.b .piece-label { color: #f2ecdd; background: rgba(28, 24, 18, 0.78); }
 .piece.dragging { transition: none; z-index: 10; cursor: grabbing; transform-origin: center; }
-.piece.w { color: #f7f0dc; text-shadow: 0 1.5px 2px rgba(0,0,0,.55), 0 0 1.5px rgba(30,25,10,.9); }
-.piece.b { color: #211d18; text-shadow: 0 1.5px 2px rgba(0,0,0,.35), 0 0 1.5px rgba(245,240,225,.35); }
+.piece.w .pglyph { color: #f7f0dc; text-shadow: 0 1.5px 2px rgba(0,0,0,.55), 0 0 1.5px rgba(30,25,10,.9); }
+.piece.b .pglyph { color: #211d18; text-shadow: 0 1.5px 2px rgba(0,0,0,.35), 0 0 1.5px rgba(245,240,225,.35); }
 .piece.no-anim { transition: none; }
+
+/* danger ring: a piece of yours that is hanging (beginner coach) */
+.sq.danger::before {
+  content: '';
+  position: absolute; inset: 6%;
+  border-radius: 8px;
+  border: calc(2px + 0.45cqw) solid rgba(224, 78, 60, 0.9);
+  box-shadow: 0 0 12px rgba(224, 78, 60, 0.55), inset 0 0 10px rgba(224, 78, 60, 0.35);
+  animation: dangerPulse 1.3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes dangerPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 
 .arrow-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .arrow-layer line, .arrow-layer polygon { opacity: 0.85; }
@@ -632,6 +664,20 @@ svg { display: block; }
   animation: fadeUp .25s ease both;
 }
 .coach-head { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+.coach-badge {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  color: var(--gold-bright);
+  background: rgba(201, 164, 65, 0.12);
+  border: 1px solid rgba(201, 164, 65, 0.32);
+  padding: 3px 10px; border-radius: 20px;
+}
+.coach-card.coach-warn { border-color: rgba(224, 78, 60, 0.5); background: rgba(224, 78, 60, 0.08); }
+.coach-card.coach-warn .coach-badge { color: #ef9d8e; border-color: rgba(224, 78, 60, 0.45); background: rgba(224, 78, 60, 0.12); }
+.coach-card.coach-hint { border-color: rgba(201, 164, 65, 0.45); }
+.coach-card.coach-explain { border-color: rgba(127, 163, 196, 0.4); }
+.coach-card.coach-explain .coach-badge { color: var(--blue); border-color: rgba(127, 163, 196, 0.4); background: rgba(127, 163, 196, 0.1); }
+.coach-card .coach-text b { color: var(--ivory); }
+.coach-card { max-height: 42vh; overflow-y: auto; }
 .verdict-pill {
   font-size: 11px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;

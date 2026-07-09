@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var R = window.RTG, AI = window.RTGAI, Coach = window.RTGCoach,
-    Book = window.RTGBOOK, Sound = window.RTGSound;
+    Book = window.RTGBOOK, Sound = window.RTGSound, Narrator = window.RTGNarrator;
 
   var GLYPHS = { 1: '♟', 2: '♞', 3: '♝', 4: '♜', 5: '♛', 6: '♚' };
 
@@ -31,7 +31,7 @@
       showLegal: App.store.get().settings.showLegal,
       onUserMove: function (from, to, promo) { self.onUserMove(from, to, promo); },
       canMove: function (color) { return self.canUserMove(color); },
-      onSelect: function (sq, code) { self.onPieceSelected(code); }
+      onSelect: function (sq, code) { self.onPieceSelected(sq, code); }
     });
     this.ui = {
       top: document.getElementById('pbar-top'),
@@ -49,6 +49,8 @@
   P._bindControls = function () {
     var self = this;
     document.getElementById('btn-hint').addEventListener('click', function () { self.hint(); });
+    var eb = document.getElementById('btn-explain');
+    if (eb) eb.addEventListener('click', function () { self.explainBoardAction(); });
     document.getElementById('btn-undo').addEventListener('click', function () { self.undo(); });
     document.getElementById('btn-flip').addEventListener('click', function () { self.flip(); });
     document.getElementById('btn-resign').addEventListener('click', function () { self.confirmResign(); });
@@ -75,8 +77,9 @@
     this.userColor = config.userColor === 'black' ? R.BLACK : R.WHITE;
     this.coachOn = !!config.coach && config.mode === 'bot';
     this.practice = config.practice || null;
-    this.gentle = !!config.gentle && config.mode === 'bot';
-    this._guideShown = {}; // piece-type explainers shown this game
+    var settings = App.store.get().settings;
+    // beginner coach is a MODE that stays on until the player turns it off
+    this.gentle = config.mode === 'bot' && (!!config.gentle || settings.beginnerCoach);
 
     this.g = new R.Game();
     this.sanLine = [];
@@ -128,7 +131,9 @@
     var orient = (this.mode === 'bot' && this.userColor === R.BLACK) ? 'black' : 'white';
     this.board.setTheme(App.store.get().settings.boardTheme);
     this.board.showLegal = App.store.get().settings.showLegal;
+    this.board.setLabels(this.gentle || App.store.get().settings.pieceLabels);
     this.board.setOrientation(orient);
+    this.board.clearDanger();
     this.board.interactive = true;
     this.board.render(this.g, true);
     this.board.setLastMove(-1, -1);
@@ -140,6 +145,15 @@
     this.ui.evalbar.hidden = !this.coachOn;
     this.setEval(0);
     this.ui.coachCard.hidden = true;
+    // beginner welcome inside the coach panel
+    var explainBtn = document.getElementById('btn-explain');
+    if (explainBtn) explainBtn.style.display = this.coachOn ? '' : 'none';
+    if (this.gentle && this.g.ply === 0) {
+      this.coachSay('Welcome! You are <b>White</b>, so you move first. ' +
+        'Click any of your pieces to see exactly where it can go and whether it is safe. ' +
+        'Stuck? Press <b>Explain</b> to have me read the whole board, or <b>Hint</b> for the best move and why. ' +
+        '<br><br>Remember the one goal: <b>trap their King</b>.', 'explain');
+    }
     this.renderMovelist();
     this.renderBars();
     this.updateOpening();
@@ -158,15 +172,57 @@
     this.save();
   };
 
-  // gentle mode: explain a piece in plain words when a new player picks it up
-  P.onPieceSelected = function (code) {
-    if (!this.gentle || !code || this.over) return;
-    var type = code & 7;
-    var count = this._guideShown[type] || 0;
-    if (count >= 2) return; // twice per piece per game, then trust them
-    this._guideShown[type] = count + 1;
-    var guide = Coach.pieceGuide(type);
-    if (guide) App.toast('<b>' + guide[0] + '</b> — ' + guide[1], 4500);
+  // beginner mode: full plain-words readout when a piece is picked up
+  P.onPieceSelected = function (sq, code) {
+    if (!this.gentle || !code || this.over || this.viewPly !== -1) return;
+    var text = Narrator.describePiece(this.g, sq, this.userColor);
+    if (text) this.coachSay(text, 'piece');
+  };
+
+  // the persistent coach panel: latest message stays until replaced
+  P.coachSay = function (html, kind) {
+    if (!this.coachOn) return;
+    var el = this.ui.coachCard;
+    el.hidden = false;
+    el.className = 'coach-card' + (kind ? ' coach-' + kind : '');
+    el.innerHTML = '<div class="coach-head"><span class="coach-badge">🎓 Coach</span></div>' +
+      '<div class="coach-text">' + html + '</div>';
+  };
+
+  P.explainBoardNow = function () {
+    if (!this.coachOn || this.over) return;
+    var live = this.viewPly === -1 ? this.g : this.g; // explanation always about live position
+    this.coachSay(Narrator.explainBoard(live, this.userColor), 'explain');
+    this.highlightThreats();
+  };
+
+  P.highlightThreats = function () {
+    if (!this.gentle) return;
+    this.board.setDanger(Narrator.hangingSquares(this.g, this.userColor));
+  };
+
+  // after the opponent replies, warn a beginner about check / hanging pieces
+  P.narrateAfterBot = function () {
+    if (!this.gentle || this.over) return;
+    if (this.g.inCheck(this.userColor)) {
+      var ksq = this.g.kingSq[this.userColor];
+      var atk = Narrator.findAttackers(this.g, ksq, this.userColor ^ 1);
+      var by = atk.length ? (' by the ' + Narrator.pieceName(this.g.board[atk[0]]) + ' on ' + R.algebraic(atk[0])) : '';
+      this.board.setDanger([ksq]);
+      this.coachSay('🚨 <b>Check!</b> Your King on ' + R.algebraic(ksq) + ' is attacked' + by +
+        '. You must respond: move the King, block the line, or capture the attacker.', 'warn');
+      return;
+    }
+    var hang = Narrator.hangingSquares(this.g, this.userColor);
+    this.board.setDanger(hang);
+    if (hang.length) {
+      var self = this;
+      var names = hang.map(function (s) { return '<b>' + Narrator.pieceName(self.g.board[s]) + ' on ' + R.algebraic(s) + '</b>'; });
+      var list = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+      this.coachSay('⚠️ <b>Watch out!</b> Your ' + list + ' ' + (hang.length > 1 ? 'are' : 'is') +
+        ' under attack with nothing defending ' + (hang.length > 1 ? 'them' : 'it') +
+        '. Move to safety or add a defender, or the opponent takes ' + (hang.length > 1 ? 'them' : 'it') + ' for free.', 'warn');
+    }
   };
 
   P.canUserMove = function (color) {
@@ -419,13 +475,10 @@
     else if (isCap) Sound.capture();
     else Sound.move();
 
-    // gentle mode: say out loud what "check" means
-    if (this.gentle && this.g.inCheck()) {
-      if (this.g.turn === this.userColor) {
-        App.toast('⚠️ Check! Your King is attacked. You must escape, block the attack, or capture the attacker.', 4500);
-      } else {
-        App.toast('Check! You are attacking their King. They have to deal with it right now.', 3500);
-      }
+    // gentle mode: cheer when the player delivers a check (their-king case
+    // is handled with more detail by narrateAfterBot in the coach panel)
+    if (this.gentle && this.g.inCheck() && this.g.turn !== this.userColor) {
+      App.toast('Check! You are attacking their King — they must deal with it right now.', 3600);
     }
 
     if (this.clock) {
@@ -539,6 +592,7 @@
     var el = this.ui.coachCard;
     if (!this.coachOn || !mm) { el.hidden = true; return; }
     el.hidden = false;
+    el.className = 'coach-card';
     var bestLine = '';
     if (verdict.id !== 'best' && mm.bestSan) {
       bestLine = '<div class="coach-best">best was ' + mm.bestSan +
@@ -609,6 +663,7 @@
       if (!self.over) {
         self.checkPracticeStatus();
         self.refreshAnalysis();
+        self.narrateAfterBot();
       }
     }, delay || 200);
   };
@@ -645,20 +700,29 @@
         return;
       }
     }
-    App.toast('Thinking…');
+    if (this.coachOn) this.coachSay('💡 Let me look at the board…', 'hint');
+    else App.toast('Thinking…');
     setTimeout(function () {
       var r = null;
       try { r = AI.analyze(self.g, 700); } catch (e) { }
-      if (!r) return;
+      if (!r || !r.move) return;
       var legal = self.g.legalMoves();
       var san = self.g.san(r.move, legal);
       self.hintsUsed++;
       if (self.mode === 'bot') App.store.addCoins(-HINT_COST);
       self.board.clearArrows();
       self.board.showArrow(R.mvFrom(r.move), R.mvTo(r.move), 'arrow-gold');
-      App.toast('Consider ' + san + (self.mode === 'bot' ? ' (−' + HINT_COST + ' 🪙)' : ''));
+      if (self.coachOn) {
+        var why = Narrator.explainMove(self.g, r.move, self.userColor, r.mate, san);
+        self.coachSay('💡 <b>Hint</b> — see the gold arrow.<br>' + why +
+          (self.mode === 'bot' ? '<br><small>(−' + HINT_COST + ' 🪙)</small>' : ''), 'hint');
+      } else {
+        App.toast('Consider ' + san);
+      }
     }, 40);
   };
+
+  P.explainBoardAction = function () { this.explainBoardNow(); };
 
   P.undo = function () {
     if (!this.active || this.over || this.viewPly !== -1 || this.pendingBot) return;
@@ -692,6 +756,9 @@
     this.renderBars();
     this.updateOpening();
     this.ui.coachCard.hidden = true;
+    this.board.clearArrows();
+    this.board.clearDanger();
+    this.highlightThreats();
     if (this.clock) this.switchClock();
     this.save();
     this.refreshAnalysis();
@@ -748,7 +815,9 @@
         this.board.setLastMove(R.mvFrom(lm), R.mvTo(lm));
       } else this.board.setLastMove(-1, -1);
       this.updateCheckMark();
+      this.highlightThreats();
     } else {
+      this.board.clearDanger();
       var upto = ply === -2 ? 0 : ply + 1;
       if (upto > this.meta.length) upto = this.meta.length;
       this.viewPly = ply === -2 ? -2 : Math.min(ply, this.meta.length - 1);
